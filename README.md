@@ -191,7 +191,7 @@ spotify-powerbi-dashboard/
 ├── screenshots/
 │   ├── home.png
 │   ├── overview.png
-│   ├── artist.png
+│   ├── artists.png
 │   └── songs.png
 │
 ├── LICENSE
