@@ -1,129 +1,124 @@
+<div align="center">
+
 # 🎵 Spotify Music Analytics Dashboard
 
-<p align="center">
-  <strong>An interactive Business Intelligence dashboard built with Microsoft Power BI to analyze Spotify music data using Power Query and DAX.</strong>
-</p>
+### Interactive Power BI dashboard for exploring Spotify music trends, artist performance, and song insights.
 
-<p align="center">
+<p>
   <img src="https://img.shields.io/badge/Power%20BI-F2C811?style=for-the-badge&logo=powerbi&logoColor=black"/>
-  <img src="https://img.shields.io/badge/DAX-Data%20Analysis-blue?style=for-the-badge"/>
+  <img src="https://img.shields.io/badge/DAX-Data%20Modeling-blue?style=for-the-badge"/>
   <img src="https://img.shields.io/badge/Power%20Query-ETL-success?style=for-the-badge"/>
   <img src="https://img.shields.io/badge/Status-Completed-brightgreen?style=for-the-badge"/>
 </p>
+
+</div>
 
 ---
 
 # 📌 Project Overview
 
-The **Spotify Music Analytics Dashboard** is an end-to-end Business Intelligence project developed in **Microsoft Power BI** to transform raw Spotify music data into meaningful, interactive insights.
+The **Spotify Music Analytics Dashboard** is an interactive Business Intelligence project built in **Microsoft Power BI** to transform raw Spotify streaming data into meaningful insights.
 
-The dashboard enables users to explore trends in music popularity, artist performance, album releases, and song characteristics through dynamic visualizations and interactive filtering. The project demonstrates the complete analytics workflow, from data cleaning and transformation to data modeling, DAX calculations, and dashboard design.
-
-Whether identifying top-performing artists, tracking release trends over time, or analyzing song popularity, the dashboard provides an intuitive interface for exploring Spotify data.
+The dashboard enables users to analyze music trends through interactive visualizations, KPIs, slicers, and drill-down reports. It provides valuable insights into artist performance, song popularity, album distribution, release trends, and listening patterns while demonstrating an end-to-end BI workflow using **Power Query** and **DAX**.
 
 ---
 
 # 🎯 Objectives
 
-- Transform raw Spotify data into actionable insights.
-- Analyze artist and song performance.
-- Visualize music popularity trends.
-- Monitor album and release statistics.
-- Build an interactive dashboard for data exploration.
-- Demonstrate Business Intelligence and data visualization skills.
+- Build an interactive music analytics dashboard
+- Analyze artist and song performance
+- Visualize popularity and release trends
+- Create meaningful KPIs using DAX
+- Demonstrate data cleaning and transformation using Power Query
+- Deliver an intuitive and modern dashboard experience
 
 ---
 
-# 🚀 Features
+# ✨ Dashboard Features
 
-- 📊 Interactive Dashboard
-- 🎛 Dynamic Filters & Slicers
-- 📈 KPI Cards
-- 🎤 Artist Performance Analysis
-- 🎵 Song-Level Insights
-- 📅 Release Trend Analysis
-- 💿 Album Type Analysis
-- 📉 Popularity Distribution
-- ⚡ Fast Navigation Between Pages
-- 🎨 Clean & Modern Dashboard Design
+- Interactive Navigation
+- Dynamic KPI Cards
+- Artist Performance Analysis
+- Song-Level Insights
+- Popularity Analysis
+- Release Trend Analysis
+- Album Type Distribution
+- Interactive Filters & Slicers
+- Responsive Dashboard Layout
+- Spotify-inspired UI Design
 
 ---
 
-# 📄 Dashboard Pages
+# 🖥 Dashboard Preview
 
 ## 🏠 Home
 
-The landing page provides seamless navigation across all dashboard sections, creating an intuitive user experience.
+The landing page provides a clean interface for navigating across all dashboard pages.
 
-**Highlights**
-
-- Dashboard Navigation
-- Interactive Buttons
-- Clean Landing Interface
-
-> **Screenshot**
-
-```md
-![Home Dashboard](screenshots/home.png)
+<p align="center">
+<img src="screenshots/home.png" width="900">
+</p>
 
 ---
 
-## 📈 Overview
+## 📊 Overview
 
-The Overview page provides a comprehensive summary of the Spotify dataset using KPI cards and interactive visualizations.
+The Overview page presents a high-level summary of the Spotify dataset using KPIs and interactive visualizations.
 
-### Key Insights
+### Highlights
 
-- Total Songs
-- Total Artists
+- Total Tracks
 - Average Popularity
-- Average Duration
+- Unique Artists
+- Explicit Song Percentage
 - Album Type Distribution
-- Release Trends
-- Popularity Distribution
+- Quarterly Popularity Trend
+- Duration vs Popularity Analysis
+- Top Artists
+- Top Songs
 
-> **Screenshot**
-
-```md
-![Home Dashboard](overview/home.png)
+<p align="center">
+<img src="screenshots/overview.png" width="900">
+</p>
 
 ---
 
 ## 🎤 Artist Analysis
 
-Explore artist performance through detailed visualizations and comparisons.
+Explore artist performance through popularity metrics and detailed comparisons.
 
-### Key Insights
+### Highlights
 
-- Top Performing Artists
 - Artist Popularity
-- Songs by Artist
-- Album Contributions
-- Interactive Comparison
+- Number of Unique Songs
+- Artist Rankings
+- Top Songs by Popularity
+- Artist Summary Statistics
+- Interactive Artist Browser
 
-> **Screenshot**
-
-```md
-![Home Dashboard](artist/home.png)
+<p align="center">
+<img src="screenshots/artists.png" width="900">
+</p>
 
 ---
 
-## 🎧 Song Analysis
+## 🎵 Song Analysis
 
-Analyze individual songs using multiple interactive visuals.
+Analyze individual tracks through song-level metrics and album information.
 
-### Key Insights
+### Highlights
 
 - Song Popularity
-- Duration Analysis
-- Explicit vs Non-Explicit Songs
-- Album Information
-- Song Rankings
+- Song Duration
+- Best Chart Position
+- Release Year
+- Album Type
+- Explicit Content
+- Total Tracks per Artist
 
-> **Screenshot**
-
-```md
-![Home Dashboard](screenshots/songs.png)
+<p align="center">
+<img src="screenshots/songs.png" width="900">
+</p>
 
 ---
 
@@ -131,64 +126,43 @@ Analyze individual songs using multiple interactive visuals.
 
 This dashboard helps answer questions such as:
 
-- Which artists have the highest popularity?
-- Which songs consistently rank at the top?
-- How has music evolved over time?
+- Which artists consistently achieve the highest popularity?
+- Which songs perform best on Spotify?
+- How does popularity vary across different quarters?
 - Which album types dominate the dataset?
-- What is the average popularity of songs?
-- How are songs distributed across release years?
-- How many songs contain explicit content?
-- Which artists contribute the most songs?
+- What percentage of songs contain explicit content?
+- Which artists contribute the highest number of tracks?
+- How are song duration and popularity related?
+- How have music releases changed over time?
 
 ---
 
-# 🛠 Data Preparation
+# ⚙ Data Preparation
 
-Data preprocessing was performed using **Power Query**.
+The dataset was transformed using **Power Query** before visualization.
 
-The workflow included:
+Data preparation included:
 
-- Cleaning raw data
-- Handling missing values
+- Cleaning raw records
 - Correcting data types
-- Formatting date columns
-- Creating calculated fields
-- Feature engineering for analysis
+- Handling missing values
+- Formatting date fields
+- Creating calculated columns
+- Optimizing data for reporting
 
 ---
 
 # 📐 DAX Measures
 
-Several DAX measures were created to support dynamic reporting and KPI calculations.
+The dashboard uses DAX to create dynamic KPIs and analytical measures, including:
 
-Examples include:
-
-- Total Songs
-- Total Artists
+- Total Tracks
 - Average Popularity
-- Maximum Popularity
-- Minimum Popularity
-- Average Song Duration
-- Distinct Artists
+- Unique Artists
+- Explicit Song Percentage
+- Maximum & Minimum Popularity
+- Average Duration
 - Custom KPI Measures
-
----
-
-# 📊 Dataset
-
-The project uses a Spotify dataset containing information such as:
-
-| Attribute |
-|-----------|
-| Song |
-| Artist |
-| Popularity |
-| Duration |
-| Album Type |
-| Total Tracks |
-| Release Date |
-| Explicit |
-| Album Cover URL |
 
 ---
 
@@ -198,61 +172,72 @@ The project uses a Spotify dataset containing information such as:
 |------------|---------|
 | Microsoft Power BI | Dashboard Development |
 | Power Query | Data Cleaning & Transformation |
-| DAX | Measures & Calculations |
-| CSV | Dataset |
+| DAX | Data Modeling & KPIs |
+| CSV | Data Source |
 
 ---
 
 # 📂 Repository Structure
 
-```
+```text
 spotify-powerbi-dashboard/
 │
 ├── dashboard/
-│   └── Spotify_Music_Analytics.pbix
+│   └── spotify_dashboard.pbix
 │
 ├── dataset/
-│   └── spotify_dataset.csv
+│   └── spotify-top-50-world.csv
 │
 ├── screenshots/
 │   ├── home.png
 │   ├── overview.png
-│   ├── artist-analysis.png
-│   └── song-analysis.png
+│   ├── artist.png
+│   └── songs.png
 │
-├── README.md
 ├── LICENSE
-└── .gitignore
+└── README.md
 ```
 
 ---
 
-# ▶️ Getting Started
+# 🚀 Getting Started
 
 ### Clone the repository
 
 ```bash
-git clone https://github.com/yourusername/spotify-powerbi-dashboard.git
+git clone https://github.com/n3h4a/spotify-powerbi-dashboard.git
 ```
 
-### Run the project
+### Open the dashboard
 
-1. Install **Microsoft Power BI Desktop**.
-2. Open `Spotify_Music_Analytics.pbix`.
-3. Refresh the dataset if required.
-4. Explore the dashboard using filters, slicers, and interactive visuals.
+1. Install **Microsoft Power BI Desktop**
+2. Open `spotify_dashboard.pbix`
+3. Refresh the dataset if required
+4. Explore the dashboard using filters, slicers, and interactive visuals
 
 ---
 
-# 🔮 Future Improvements
+# 📈 Key Skills Demonstrated
 
-- Spotify API Integration
-- Real-Time Dashboard
-- Genre-Based Analytics
-- Playlist Analytics
-- Listening Behaviour Analysis
-- Predictive Analytics
-- Mobile Dashboard Optimization
+- Business Intelligence
+- Data Visualization
+- Dashboard Design
+- Data Cleaning
+- ETL using Power Query
+- DAX Calculations
+- KPI Development
+- Interactive Reporting
+
+---
+
+# 🔮 Future Enhancements
+
+- Spotify Web API integration
+- Real-time dashboard updates
+- Genre-wise analytics
+- Playlist analytics
+- Listening behavior analysis
+- Predictive trend forecasting
 
 ---
 
@@ -260,12 +245,14 @@ git clone https://github.com/yourusername/spotify-powerbi-dashboard.git
 
 **Neha Karamchandani**
 
-B.Tech in Information Technology
+B.Tech – Information Technology
 
-Passionate about **Data Analytics**, **Business Intelligence**, **SQL**, **Power BI**, and **Data Visualization**.
+Passionate about **Data Analytics**, **Business Intelligence**, **Power BI**, **SQL**, and **Data Visualization**.
 
 ---
 
-## ⭐ Support
+<div align="center">
 
-If you found this project useful or interesting, consider giving it a **Star** ⭐ on GitHub.
+### ⭐ If you found this project interesting, consider giving it a star!
+
+</div>
