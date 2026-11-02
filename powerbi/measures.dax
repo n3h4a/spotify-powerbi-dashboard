@@ -1,0 +1,105 @@
+// =============================================================================
+// DAX measures for the star-schema model (see docs/powerbi_guide.md).
+// Create a blank table named _Measures and add each measure below to it.
+// =============================================================================
+
+// ---------------------------------------------------------------- core volume
+Chart Entries =
+COUNTROWS ( fact_chart_entry )
+
+Tracks Charting =
+DISTINCTCOUNT ( fact_chart_entry[track_key] )
+
+Snapshots =
+DISTINCTCOUNT ( fact_chart_entry[chart_date] )
+
+Avg Popularity =
+AVERAGE ( fact_chart_entry[popularity] )
+
+// ---------------------------------------------------------------- chart movement
+Debuts =
+CALCULATE ( [Chart Entries], fact_chart_entry[entry_status] = "debut" )
+
+Re-entries =
+CALCULATE ( [Chart Entries], fact_chart_entry[entry_status] = "re-entry" )
+
+// Share of each day's chart that is new versus the previous snapshot.
+// The first snapshot has no previous chart, so it is excluded.
+Turnover Rate =
+VAR FirstSnapshot = CALCULATE ( MIN ( fact_chart_entry[chart_date] ), REMOVEFILTERS () )
+RETURN
+    DIVIDE (
+        CALCULATE ( [Debuts] + [Re-entries], fact_chart_entry[chart_date] <> FirstSnapshot ),
+        CALCULATE ( [Chart Entries], fact_chart_entry[chart_date] <> FirstSnapshot )
+    )
+
+Days at #1 =
+CALCULATE ( [Chart Entries], fact_chart_entry[chart_position] = 1 )
+
+Top 10 Entries =
+CALCULATE ( [Chart Entries], fact_chart_entry[chart_position] <= 10 )
+
+Best Position =
+MIN ( fact_chart_entry[chart_position] )
+
+Longest Streak (days) =
+MAX ( fact_chart_entry[current_streak_days] )
+
+// ---------------------------------------------------------------- artists (via the bridge)
+// Splits each chart entry between its credited artists: summed over all artists
+// this equals [Chart Entries] exactly, so collaborations are never double counted.
+Artist Weighted Chart Days =
+SUMX (
+    bridge_track_artist,
+    bridge_track_artist[attribution_weight]
+        * CALCULATE (
+            [Chart Entries],
+            TREATAS ( { bridge_track_artist[track_key] }, dim_track[track_key] )
+        )
+)
+
+// Every day an artist is credited, counted in full (a duet counts for both).
+Artist Credited Chart Days =
+CALCULATE (
+    [Chart Entries],
+    CROSSFILTER ( bridge_track_artist[track_key], dim_track[track_key], BOTH )
+)
+
+Artist Share of Chart =
+DIVIDE ( [Artist Weighted Chart Days], CALCULATE ( [Chart Entries], REMOVEFILTERS ( dim_artist ) ) )
+
+// ---------------------------------------------------------------- point-in-time attributes (SCD2)
+// Uses the track version valid on each chart day, not today's attributes.
+Single Share =
+DIVIDE ( CALCULATE ( [Chart Entries], dim_track_version[album_type] = "single" ), [Chart Entries] )
+
+Explicit Share =
+DIVIDE ( CALCULATE ( [Chart Entries], dim_track_version[is_explicit] = TRUE () ), [Chart Entries] )
+
+// ---------------------------------------------------------------- track life (mart_track_performance)
+Median Chart Life (days) =
+MEDIAN ( mart_track_performance[total_chart_days] )
+
+Peaked on Debut % =
+DIVIDE (
+    CALCULATE ( COUNTROWS ( mart_track_performance ), mart_track_performance[peaked_on_debut] = TRUE () ),
+    COUNTROWS ( mart_track_performance )
+)
+
+// Fair longevity comparison: only tracks with a known debut and a full 180-day window.
+Median Days in First 180 =
+CALCULATE (
+    MEDIAN ( mart_track_performance[chart_days_first_180] ),
+    mart_track_performance[is_left_censored] = FALSE (),
+    mart_track_performance[has_full_180_day_window] = TRUE ()
+)
+
+// ---------------------------------------------------------------- chart health (mart_daily_chart)
+Avg Artist HHI =
+AVERAGE ( mart_daily_chart[artist_hhi] )
+
+Holiday Track Share =
+AVERAGE ( mart_daily_chart[holiday_track_share] )
+
+Collaboration Share =
+AVERAGE ( mart_daily_chart[collaboration_share] )
