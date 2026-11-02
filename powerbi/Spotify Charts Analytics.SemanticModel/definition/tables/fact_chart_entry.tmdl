@@ -1,0 +1,220 @@
+table fact_chart_entry
+	lineageTag: 1c4a6ceb-6f22-5e99-b110-b57640a8a7a4
+
+	measure 'Chart Entries' = COUNTROWS ( fact_chart_entry )
+		formatString: #,0
+		displayFolder: Chart
+		lineageTag: f3035b06-eca5-5824-882c-55230d643f87
+
+	measure 'Tracks Charting' = DISTINCTCOUNT ( fact_chart_entry[track_key] )
+		formatString: #,0
+		displayFolder: Chart
+		lineageTag: a27210b6-8cf0-5d04-8d27-99d4127fa460
+
+	measure Snapshots = DISTINCTCOUNT ( fact_chart_entry[chart_date] )
+		formatString: #,0
+		displayFolder: Chart
+		lineageTag: fdc85985-c003-5a06-9c77-9b008dee8208
+
+	measure 'Avg Popularity' = AVERAGE ( fact_chart_entry[popularity] )
+		formatString: 0.0
+		displayFolder: Chart
+		lineageTag: bdc70d79-a873-574d-b051-90a40710fe46
+
+	measure Debuts = CALCULATE ( [Chart Entries], fact_chart_entry[entry_status] = "debut" )
+		formatString: #,0
+		displayFolder: Movement
+		lineageTag: 6d1b6065-be8c-5c5b-ade3-ac636c00fd13
+
+	measure 'Re-entries' = CALCULATE ( [Chart Entries], fact_chart_entry[entry_status] = "re-entry" )
+		formatString: #,0
+		displayFolder: Movement
+		lineageTag: cfd81afd-d645-530c-b1da-f945b867b373
+
+	measure 'Turnover Rate' =
+			VAR FirstSnapshot =
+			    CALCULATE ( MIN ( fact_chart_entry[chart_date] ), ALL ( fact_chart_entry ) )
+			RETURN
+			    DIVIDE (
+			        CALCULATE (
+			            [Debuts] + [Re-entries],
+			            fact_chart_entry[chart_date] <> FirstSnapshot
+			        ),
+			        CALCULATE ( [Chart Entries], fact_chart_entry[chart_date] <> FirstSnapshot )
+			    )
+		formatString: 0.0%
+		displayFolder: Movement
+		lineageTag: 4295c9fe-21c6-5769-b048-2128ceab8df7
+
+	measure 'Days at #1' = CALCULATE ( [Chart Entries], fact_chart_entry[chart_position] = 1 )
+		formatString: #,0
+		displayFolder: Movement
+		lineageTag: 737b0c5b-6381-588d-97bf-d53b08f6ef9f
+
+	measure 'Best Position' = MIN ( fact_chart_entry[chart_position] )
+		formatString: 0
+		displayFolder: Movement
+		lineageTag: 0ea09281-9837-5995-8378-e999f4161bbb
+
+	measure 'Artist Weighted Chart Days' =
+			SUMX (
+			    bridge_track_artist,
+			    bridge_track_artist[attribution_weight]
+			        * CALCULATE (
+			            [Chart Entries],
+			            TREATAS ( { bridge_track_artist[track_key] }, dim_track[track_key] )
+			        )
+			)
+		formatString: #,0.0
+		displayFolder: Artists
+		lineageTag: ecc93031-d954-510b-998b-70a8a111ea8d
+
+	measure 'Artist Credited Chart Days' =
+			CALCULATE (
+			    [Chart Entries],
+			    CROSSFILTER ( bridge_track_artist[track_key], dim_track[track_key], BOTH )
+			)
+		formatString: #,0
+		displayFolder: Artists
+		lineageTag: 15699d96-41cf-5839-83c5-b2dfefb558d1
+
+	measure 'Artist Share of Chart' =
+			DIVIDE (
+			    [Artist Weighted Chart Days],
+			    CALCULATE ( [Chart Entries], REMOVEFILTERS ( dim_artist ) )
+			)
+		formatString: 0.0%
+		displayFolder: Artists
+		lineageTag: 44852e10-9a27-55d2-886f-3fd424e3f877
+
+	measure 'Single Share' = DIVIDE ( CALCULATE ( [Chart Entries], dim_track_version[album_type] = "single" ), [Chart Entries] )
+		formatString: 0.0%
+		displayFolder: Point in time
+		lineageTag: 91ad4fd2-66c8-570d-86f5-c4e79a3d36c1
+
+	measure 'Explicit Share' = DIVIDE ( CALCULATE ( [Chart Entries], dim_track_version[is_explicit] = TRUE () ), [Chart Entries] )
+		formatString: 0.0%
+		displayFolder: Point in time
+		lineageTag: e9b3264a-3030-5c9b-86b6-fa3a8ee9b35e
+
+	column date_key
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 98b865fa-4f3e-558f-96aa-02a30b08ba98
+		summarizeBy: none
+		sourceColumn: date_key
+
+		annotation SummarizationSetBy = User
+
+	column chart_date
+		dataType: dateTime
+		formatString: yyyy-mm-dd
+		lineageTag: 0a73f5a5-dd17-5e8c-9fe4-aefa386d7544
+		summarizeBy: none
+		sourceColumn: chart_date
+
+		annotation SummarizationSetBy = User
+
+	column chart_position
+		dataType: int64
+		formatString: 0
+		lineageTag: 1b6ebdd2-3a8e-5a25-bd39-f39f0d59d985
+		summarizeBy: none
+		sourceColumn: chart_position
+
+		annotation SummarizationSetBy = User
+
+	column track_key
+		dataType: string
+		isHidden
+		lineageTag: 413b2cc8-b23d-5010-9ea1-72e379706b47
+		summarizeBy: none
+		sourceColumn: track_key
+
+		annotation SummarizationSetBy = User
+
+	column track_version_key
+		dataType: string
+		isHidden
+		lineageTag: e8dcdbe9-8446-58a8-82e3-55263847d5c6
+		summarizeBy: none
+		sourceColumn: track_version_key
+
+		annotation SummarizationSetBy = User
+
+	column popularity
+		dataType: int64
+		formatString: 0
+		lineageTag: 4c0f8396-8db2-5bb0-bb48-ea28c32a5202
+		summarizeBy: none
+		sourceColumn: popularity
+
+		annotation SummarizationSetBy = User
+
+	column previous_position
+		dataType: int64
+		formatString: 0
+		lineageTag: d74f6eed-07d8-5b35-a732-82317b38370f
+		summarizeBy: none
+		sourceColumn: previous_position
+
+		annotation SummarizationSetBy = User
+
+	column position_change
+		dataType: int64
+		formatString: 0
+		lineageTag: e4242e06-09e1-59e6-b7c1-35f1e185b8aa
+		summarizeBy: none
+		sourceColumn: position_change
+
+		annotation SummarizationSetBy = User
+
+	column entry_status
+		dataType: string
+		lineageTag: 9761dc68-a760-5bfc-a458-7b6c057169ab
+		summarizeBy: none
+		sourceColumn: entry_status
+
+		annotation SummarizationSetBy = User
+
+	column chart_days_to_date
+		dataType: int64
+		formatString: 0
+		lineageTag: f9e4606e-51d9-5fa6-abf4-56378ace60f9
+		summarizeBy: none
+		sourceColumn: chart_days_to_date
+
+		annotation SummarizationSetBy = User
+
+	column current_streak_days
+		dataType: int64
+		formatString: 0
+		lineageTag: 98d378a7-fced-5cd9-96cb-9b7d64d6d7b4
+		summarizeBy: none
+		sourceColumn: current_streak_days
+
+		annotation SummarizationSetBy = User
+
+	column peak_position_to_date
+		dataType: int64
+		formatString: 0
+		lineageTag: cc9d9789-b907-53ff-985e-6a75e30d10f4
+		summarizeBy: none
+		sourceColumn: peak_position_to_date
+
+		annotation SummarizationSetBy = User
+
+	partition fact_chart_entry = m
+		mode: import
+		source =
+				let
+				    FileName = "fact_chart_entry.parquet",
+				    Content = if Text.StartsWith(DataLocation, "http")
+				        then Web.Contents(DataLocation & FileName)
+				        else File.Contents(DataLocation & FileName),
+				    Source = Parquet.Document(Binary.Buffer(Content))
+				in
+				    Source
+
+	annotation PBI_ResultType = Table

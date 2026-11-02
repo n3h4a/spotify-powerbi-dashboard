@@ -1,0 +1,319 @@
+table mart_track_performance
+	lineageTag: 1167898d-c050-5518-a95d-de714f67af3f
+
+	measure 'Median Chart Life (days)' = MEDIAN ( mart_track_performance[total_chart_days] )
+		formatString: 0
+		displayFolder: Track life
+		lineageTag: bb7554e0-d8d7-53dd-8a0b-4a8a58552560
+
+	measure 'Peaked on Debut %' =
+			DIVIDE (
+			    CALCULATE (
+			        COUNTROWS ( mart_track_performance ),
+			        mart_track_performance[peaked_on_debut] = TRUE ()
+			    ),
+			    COUNTROWS ( mart_track_performance )
+			)
+		formatString: 0%
+		displayFolder: Track life
+		lineageTag: cdacff93-257c-58f3-aea0-2dc90991bbb1
+
+	measure 'Median Days in First 180' =
+			CALCULATE (
+			    MEDIAN ( mart_track_performance[chart_days_first_180] ),
+			    mart_track_performance[is_left_censored] = FALSE (),
+			    mart_track_performance[has_full_180_day_window] = TRUE ()
+			)
+		formatString: 0
+		displayFolder: Track life
+		lineageTag: 9a747b28-6c8a-52e9-82b6-d8bc02211132
+
+	column track_key
+		dataType: string
+		isHidden
+		lineageTag: cd66943f-1e87-56c8-8759-3061999c27db
+		summarizeBy: none
+		sourceColumn: track_key
+
+		annotation SummarizationSetBy = User
+
+	column track_title
+		dataType: string
+		lineageTag: aaaaa997-d425-51fa-9b36-ba3a0d5799b3
+		summarizeBy: none
+		sourceColumn: track_title
+
+		annotation SummarizationSetBy = User
+
+	column lead_artist_name
+		dataType: string
+		lineageTag: e1e74378-dfa1-5f84-a4c2-1751fe04a5a9
+		summarizeBy: none
+		sourceColumn: lead_artist_name
+
+		annotation SummarizationSetBy = User
+
+	column lead_artist_key
+		dataType: string
+		isHidden
+		lineageTag: 524e7961-4fef-5838-acd9-90fb9bfade23
+		summarizeBy: none
+		sourceColumn: lead_artist_key
+
+		annotation SummarizationSetBy = User
+
+	column n_credited_artists
+		dataType: int64
+		formatString: 0
+		lineageTag: 934d80d0-cccd-501f-bcdb-3c5a3056a432
+		summarizeBy: none
+		sourceColumn: n_credited_artists
+
+		annotation SummarizationSetBy = User
+
+	column is_collaboration
+		dataType: boolean
+		lineageTag: 4e7daf8d-1081-5b30-8a6c-60568121e78a
+		summarizeBy: none
+		sourceColumn: is_collaboration
+
+		annotation SummarizationSetBy = User
+
+	column debut_date
+		dataType: dateTime
+		formatString: yyyy-mm-dd
+		lineageTag: 80817426-728f-59d6-86e8-12cc190f11f3
+		summarizeBy: none
+		sourceColumn: debut_date
+
+		annotation SummarizationSetBy = User
+
+	column debut_position
+		dataType: int64
+		formatString: 0
+		lineageTag: 2f0d463c-292e-5fac-8182-6e7c30f4c5e5
+		summarizeBy: none
+		sourceColumn: debut_position
+
+		annotation SummarizationSetBy = User
+
+	column last_chart_date
+		dataType: dateTime
+		formatString: yyyy-mm-dd
+		lineageTag: 44e42562-e5c4-5a84-bc0e-b4f59ce47756
+		summarizeBy: none
+		sourceColumn: last_chart_date
+
+		annotation SummarizationSetBy = User
+
+	column peak_position
+		dataType: int64
+		formatString: 0
+		lineageTag: a69a74ec-6c6f-5034-83d7-a6f4309dd46f
+		summarizeBy: none
+		sourceColumn: peak_position
+
+		annotation SummarizationSetBy = User
+
+	column first_peak_date
+		dataType: dateTime
+		formatString: yyyy-mm-dd
+		lineageTag: a58dfd0b-e340-51ec-b3bd-f46dc4bb139e
+		summarizeBy: none
+		sourceColumn: first_peak_date
+
+		annotation SummarizationSetBy = User
+
+	column chart_days_debut_to_peak
+		dataType: int64
+		formatString: 0
+		lineageTag: 76c75c75-3434-5e80-bf89-4421979a8df6
+		summarizeBy: none
+		sourceColumn: chart_days_debut_to_peak
+
+		annotation SummarizationSetBy = User
+
+	column peaked_on_debut
+		dataType: boolean
+		lineageTag: fe91b4cb-14bc-5b9a-b848-381cb5326f02
+		summarizeBy: none
+		sourceColumn: peaked_on_debut
+
+		annotation SummarizationSetBy = User
+
+	column total_chart_days
+		dataType: int64
+		formatString: 0
+		lineageTag: 697184ad-5022-57f3-9ef5-c5bdf1886607
+		summarizeBy: none
+		sourceColumn: total_chart_days
+
+		annotation SummarizationSetBy = User
+
+	column n_reentries
+		dataType: int64
+		formatString: 0
+		lineageTag: 9801f5bd-746f-5d1b-ac7c-d55c476daeed
+		summarizeBy: none
+		sourceColumn: n_reentries
+
+		annotation SummarizationSetBy = User
+
+	column longest_streak_days
+		dataType: int64
+		formatString: 0
+		lineageTag: bb6ca97c-1786-5b75-b095-2304ae75a32c
+		summarizeBy: none
+		sourceColumn: longest_streak_days
+
+		annotation SummarizationSetBy = User
+
+	column days_at_no1
+		dataType: int64
+		formatString: 0
+		lineageTag: 60e94f03-7026-507a-b8d1-17dc068afa00
+		summarizeBy: none
+		sourceColumn: days_at_no1
+
+		annotation SummarizationSetBy = User
+
+	column days_in_top10
+		dataType: int64
+		formatString: 0
+		lineageTag: 17b9c738-e4fa-5e37-bb95-2e5943da8d28
+		summarizeBy: none
+		sourceColumn: days_in_top10
+
+		annotation SummarizationSetBy = User
+
+	column avg_popularity
+		dataType: double
+		formatString: #,0.00
+		lineageTag: 52262f80-4c61-511b-abae-98705f865ce8
+		summarizeBy: none
+		sourceColumn: avg_popularity
+
+		annotation SummarizationSetBy = User
+
+	column max_popularity
+		dataType: int64
+		formatString: 0
+		lineageTag: 9a101e5b-1685-5289-bb4b-c5ed2e21402c
+		summarizeBy: none
+		sourceColumn: max_popularity
+
+		annotation SummarizationSetBy = User
+
+	column debut_album_type
+		dataType: string
+		lineageTag: aeb132ac-447a-558c-9047-48e6f96da4f7
+		summarizeBy: none
+		sourceColumn: debut_album_type
+
+		annotation SummarizationSetBy = User
+
+	column debut_is_explicit
+		dataType: boolean
+		lineageTag: 994873f7-08ad-5083-9441-564359c3733e
+		summarizeBy: none
+		sourceColumn: debut_is_explicit
+
+		annotation SummarizationSetBy = User
+
+	column debut_duration_ms
+		dataType: int64
+		formatString: 0
+		lineageTag: c876bf8b-4399-523e-b63b-ffb7440f43f2
+		summarizeBy: none
+		sourceColumn: debut_duration_ms
+
+		annotation SummarizationSetBy = User
+
+	column release_date
+		dataType: dateTime
+		formatString: yyyy-mm-dd
+		lineageTag: 10e27764-7748-54e4-9aa4-91606e22f93f
+		summarizeBy: none
+		sourceColumn: release_date
+
+		annotation SummarizationSetBy = User
+
+	column release_date_precision
+		dataType: string
+		lineageTag: 382492c6-c43f-5c25-aefd-53a1cf2fec7c
+		summarizeBy: none
+		sourceColumn: release_date_precision
+
+		annotation SummarizationSetBy = User
+
+	column days_release_to_debut
+		dataType: int64
+		formatString: 0
+		lineageTag: 071a57e3-3f10-5210-b4fb-bb5084467947
+		summarizeBy: none
+		sourceColumn: days_release_to_debut
+
+		annotation SummarizationSetBy = User
+
+	column release_age_at_debut
+		dataType: string
+		lineageTag: f9b1b078-dc73-55ec-82ec-6588c840a7cb
+		summarizeBy: none
+		sourceColumn: release_age_at_debut
+
+		annotation SummarizationSetBy = User
+
+	column is_holiday_track
+		dataType: boolean
+		lineageTag: 7443369c-0730-5776-9605-6314567c33fe
+		summarizeBy: none
+		sourceColumn: is_holiday_track
+
+		annotation SummarizationSetBy = User
+
+	column is_left_censored
+		dataType: boolean
+		lineageTag: b016943c-3d92-5dc2-8251-50aaa110d808
+		summarizeBy: none
+		sourceColumn: is_left_censored
+
+		annotation SummarizationSetBy = User
+
+	column is_right_censored
+		dataType: boolean
+		lineageTag: 0194c182-503c-55f7-93ad-f907e6903695
+		summarizeBy: none
+		sourceColumn: is_right_censored
+
+		annotation SummarizationSetBy = User
+
+	column has_full_180_day_window
+		dataType: boolean
+		lineageTag: 87852aad-61b5-5cca-b8a1-26eed36fec5f
+		summarizeBy: none
+		sourceColumn: has_full_180_day_window
+
+		annotation SummarizationSetBy = User
+
+	column chart_days_first_180
+		dataType: int64
+		formatString: 0
+		lineageTag: 1cf93346-fbaf-558d-ba70-cbac6cd3b79c
+		summarizeBy: none
+		sourceColumn: chart_days_first_180
+
+		annotation SummarizationSetBy = User
+
+	partition mart_track_performance = m
+		mode: import
+		source =
+				let
+				    FileName = "mart_track_performance.parquet",
+				    Content = if Text.StartsWith(DataLocation, "http")
+				        then Web.Contents(DataLocation & FileName)
+				        else File.Contents(DataLocation & FileName),
+				    Source = Parquet.Document(Binary.Buffer(Content))
+				in
+				    Source
+
+	annotation PBI_ResultType = Table

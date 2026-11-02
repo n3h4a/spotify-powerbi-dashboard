@@ -1,0 +1,38 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.2.0/schema.json",
+  "name": "7ebd9908cd9c5e2389ce",
+  "position": {
+    "x": 520,
+    "y": 88,
+    "z": 3000,
+    "width": 232,
+    "height": 104,
+    "tabOrder": 3000
+  },
+  "visual": {
+    "visualType": "card",
+    "query": {
+      "queryState": {
+        "Values": {
+          "projections": [
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "mart_daily_chart"
+                    }
+                  },
+                  "Property": "Holiday Track Share"
+                }
+              },
+              "queryRef": "mart_daily_chart.Holiday Track Share",
+              "nativeQueryRef": "Holiday Track Share"
+            }
+          ]
+        }
+      }
+    },
+    "drillFilterOtherVisuals": true
+  }
+}

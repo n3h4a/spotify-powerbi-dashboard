@@ -1,0 +1,190 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.2.0/schema.json",
+  "name": "9340160223655a2a8ba7",
+  "position": {
+    "x": 320,
+    "y": 88,
+    "z": 2000,
+    "width": 936,
+    "height": 616,
+    "tabOrder": 2000
+  },
+  "visual": {
+    "visualType": "tableEx",
+    "query": {
+      "queryState": {
+        "Values": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "mart_track_performance"
+                    }
+                  },
+                  "Property": "track_title"
+                }
+              },
+              "queryRef": "mart_track_performance.track_title",
+              "nativeQueryRef": "track_title"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "mart_track_performance"
+                    }
+                  },
+                  "Property": "lead_artist_name"
+                }
+              },
+              "queryRef": "mart_track_performance.lead_artist_name",
+              "nativeQueryRef": "lead_artist_name"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "mart_track_performance"
+                    }
+                  },
+                  "Property": "debut_date"
+                }
+              },
+              "queryRef": "mart_track_performance.debut_date",
+              "nativeQueryRef": "debut_date"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "mart_track_performance"
+                    }
+                  },
+                  "Property": "debut_position"
+                }
+              },
+              "queryRef": "mart_track_performance.debut_position",
+              "nativeQueryRef": "debut_position"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "mart_track_performance"
+                    }
+                  },
+                  "Property": "peak_position"
+                }
+              },
+              "queryRef": "mart_track_performance.peak_position",
+              "nativeQueryRef": "peak_position"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "mart_track_performance"
+                    }
+                  },
+                  "Property": "total_chart_days"
+                }
+              },
+              "queryRef": "mart_track_performance.total_chart_days",
+              "nativeQueryRef": "total_chart_days"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "mart_track_performance"
+                    }
+                  },
+                  "Property": "days_at_no1"
+                }
+              },
+              "queryRef": "mart_track_performance.days_at_no1",
+              "nativeQueryRef": "days_at_no1"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "mart_track_performance"
+                    }
+                  },
+                  "Property": "longest_streak_days"
+                }
+              },
+              "queryRef": "mart_track_performance.longest_streak_days",
+              "nativeQueryRef": "longest_streak_days"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "mart_track_performance"
+                    }
+                  },
+                  "Property": "release_age_at_debut"
+                }
+              },
+              "queryRef": "mart_track_performance.release_age_at_debut",
+              "nativeQueryRef": "release_age_at_debut"
+            }
+          ]
+        }
+      },
+      "sortDefinition": {
+        "sort": [
+          {
+            "field": {
+              "Column": {
+                "Expression": {
+                  "SourceRef": {
+                    "Entity": "mart_track_performance"
+                  }
+                },
+                "Property": "total_chart_days"
+              }
+            },
+            "direction": "Descending"
+          }
+        ],
+        "isDefaultSort": false
+      }
+    },
+    "drillFilterOtherVisuals": true,
+    "visualContainerObjects": {
+      "title": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "text": {
+              "expr": {
+                "Literal": {
+                  "Value": "'Tracks by total days on chart'"
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

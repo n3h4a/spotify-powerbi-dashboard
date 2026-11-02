@@ -1,0 +1,78 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.2.0/schema.json",
+  "name": "b4d5e0db2d315805935c",
+  "position": {
+    "x": 656,
+    "y": 208,
+    "z": 7000,
+    "width": 600,
+    "height": 240,
+    "tabOrder": 7000
+  },
+  "visual": {
+    "visualType": "clusteredColumnChart",
+    "query": {
+      "queryState": {
+        "Category": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "mart_track_performance"
+                    }
+                  },
+                  "Property": "peaked_on_debut"
+                }
+              },
+              "queryRef": "mart_track_performance.peaked_on_debut",
+              "nativeQueryRef": "peaked_on_debut"
+            }
+          ]
+        },
+        "Y": {
+          "projections": [
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "mart_track_performance"
+                    }
+                  },
+                  "Property": "Median Days in First 180"
+                }
+              },
+              "queryRef": "mart_track_performance.Median Days in First 180",
+              "nativeQueryRef": "Median Days in First 180"
+            }
+          ]
+        }
+      }
+    },
+    "drillFilterOtherVisuals": true,
+    "visualContainerObjects": {
+      "title": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "text": {
+              "expr": {
+                "Literal": {
+                  "Value": "'Median days on chart (first 180): peaked on debut?'"
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

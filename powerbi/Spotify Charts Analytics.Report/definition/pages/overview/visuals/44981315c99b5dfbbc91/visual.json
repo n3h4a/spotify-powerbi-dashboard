@@ -1,0 +1,38 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.2.0/schema.json",
+  "name": "44981315c99b5dfbbc91",
+  "position": {
+    "x": 1016,
+    "y": 88,
+    "z": 5000,
+    "width": 232,
+    "height": 104,
+    "tabOrder": 5000
+  },
+  "visual": {
+    "visualType": "card",
+    "query": {
+      "queryState": {
+        "Values": {
+          "projections": [
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "mart_daily_chart"
+                    }
+                  },
+                  "Property": "Avg Artist HHI"
+                }
+              },
+              "queryRef": "mart_daily_chart.Avg Artist HHI",
+              "nativeQueryRef": "Avg Artist HHI"
+            }
+          ]
+        }
+      }
+    },
+    "drillFilterOtherVisuals": true
+  }
+}

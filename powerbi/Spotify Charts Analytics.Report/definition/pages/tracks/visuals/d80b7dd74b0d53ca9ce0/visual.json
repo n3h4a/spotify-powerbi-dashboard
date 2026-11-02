@@ -1,0 +1,60 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.2.0/schema.json",
+  "name": "d80b7dd74b0d53ca9ce0",
+  "position": {
+    "x": 24,
+    "y": 88,
+    "z": 1000,
+    "width": 280,
+    "height": 616,
+    "tabOrder": 1000
+  },
+  "visual": {
+    "visualType": "slicer",
+    "query": {
+      "queryState": {
+        "Values": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "mart_track_performance"
+                    }
+                  },
+                  "Property": "lead_artist_name"
+                }
+              },
+              "queryRef": "mart_track_performance.lead_artist_name",
+              "nativeQueryRef": "lead_artist_name"
+            }
+          ]
+        }
+      }
+    },
+    "drillFilterOtherVisuals": true,
+    "visualContainerObjects": {
+      "title": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "text": {
+              "expr": {
+                "Literal": {
+                  "Value": "'Lead artist'"
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

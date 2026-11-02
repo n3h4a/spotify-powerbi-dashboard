@@ -1,0 +1,33 @@
+table dim_artist
+	lineageTag: e30c223e-1787-53ab-96d8-529ad2344426
+
+	column artist_key
+		dataType: string
+		isHidden
+		lineageTag: fccc3e75-f3a8-56f3-b327-a2f828242ddb
+		summarizeBy: none
+		sourceColumn: artist_key
+
+		annotation SummarizationSetBy = User
+
+	column artist_name
+		dataType: string
+		lineageTag: e999f540-f1ed-5f4b-b5c9-9b3e3b9508a1
+		summarizeBy: none
+		sourceColumn: artist_name
+
+		annotation SummarizationSetBy = User
+
+	partition dim_artist = m
+		mode: import
+		source =
+				let
+				    FileName = "dim_artist.parquet",
+				    Content = if Text.StartsWith(DataLocation, "http")
+				        then Web.Contents(DataLocation & FileName)
+				        else File.Contents(DataLocation & FileName),
+				    Source = Parquet.Document(Binary.Buffer(Content))
+				in
+				    Source
+
+	annotation PBI_ResultType = Table

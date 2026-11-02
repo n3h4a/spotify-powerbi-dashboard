@@ -1,0 +1,141 @@
+table mart_artist_performance
+	lineageTag: 627bd977-426f-57bb-af8a-9b75328189ac
+
+	column artist_rank
+		dataType: int64
+		formatString: 0
+		lineageTag: 565dfa70-a127-562c-ac5d-16a48e941848
+		summarizeBy: none
+		sourceColumn: artist_rank
+
+		annotation SummarizationSetBy = User
+
+	column artist_key
+		dataType: string
+		isHidden
+		lineageTag: 65380e6a-daa5-51ea-9269-64ba386bec9c
+		summarizeBy: none
+		sourceColumn: artist_key
+
+		annotation SummarizationSetBy = User
+
+	column artist_name
+		dataType: string
+		lineageTag: b862d1e1-5542-564e-8ece-1ad8ae45292c
+		summarizeBy: none
+		sourceColumn: artist_name
+
+		annotation SummarizationSetBy = User
+
+	column n_tracks
+		dataType: int64
+		formatString: 0
+		lineageTag: 3abfb23b-d5f8-5f49-a921-f3827a131f62
+		summarizeBy: none
+		sourceColumn: n_tracks
+
+		annotation SummarizationSetBy = User
+
+	column n_tracks_as_lead
+		dataType: int64
+		formatString: 0
+		lineageTag: b2c41aac-9a19-55aa-9772-31b3a5521a16
+		summarizeBy: none
+		sourceColumn: n_tracks_as_lead
+
+		annotation SummarizationSetBy = User
+
+	column n_collaboration_tracks
+		dataType: int64
+		formatString: 0
+		lineageTag: 76f2b58a-7457-5967-bde5-f1a84a07176f
+		summarizeBy: none
+		sourceColumn: n_collaboration_tracks
+
+		annotation SummarizationSetBy = User
+
+	column credited_chart_days
+		dataType: int64
+		formatString: 0
+		lineageTag: 706931be-a7e6-50d4-97a2-510f34ae9081
+		summarizeBy: none
+		sourceColumn: credited_chart_days
+
+		annotation SummarizationSetBy = User
+
+	column weighted_chart_days
+		dataType: double
+		formatString: #,0.00
+		lineageTag: 01ffbea9-b9df-5bf0-9480-e560812d5455
+		summarizeBy: none
+		sourceColumn: weighted_chart_days
+
+		annotation SummarizationSetBy = User
+
+	column share_of_chart
+		dataType: double
+		formatString: 0.0%
+		lineageTag: 9a57c12a-0813-5467-8cd9-aebd5b2a9627
+		summarizeBy: none
+		sourceColumn: share_of_chart
+
+		annotation SummarizationSetBy = User
+
+	column days_at_no1
+		dataType: int64
+		formatString: 0
+		lineageTag: 4c4e78f5-893d-5808-a3b5-c21a81d69f18
+		summarizeBy: none
+		sourceColumn: days_at_no1
+
+		annotation SummarizationSetBy = User
+
+	column days_in_top10
+		dataType: int64
+		formatString: 0
+		lineageTag: 7a93256c-b9b3-5e14-857d-40c1c58d9ada
+		summarizeBy: none
+		sourceColumn: days_in_top10
+
+		annotation SummarizationSetBy = User
+
+	column best_position
+		dataType: int64
+		formatString: 0
+		lineageTag: 48884739-d23d-5352-bdd8-3a818aa558b1
+		summarizeBy: none
+		sourceColumn: best_position
+
+		annotation SummarizationSetBy = User
+
+	column first_chart_date
+		dataType: dateTime
+		formatString: yyyy-mm-dd
+		lineageTag: b3414e69-c726-5aa7-9d6c-7071b6b55b6d
+		summarizeBy: none
+		sourceColumn: first_chart_date
+
+		annotation SummarizationSetBy = User
+
+	column last_chart_date
+		dataType: dateTime
+		formatString: yyyy-mm-dd
+		lineageTag: 1ee09286-5ca7-5093-bb69-85e4d05afb20
+		summarizeBy: none
+		sourceColumn: last_chart_date
+
+		annotation SummarizationSetBy = User
+
+	partition mart_artist_performance = m
+		mode: import
+		source =
+				let
+				    FileName = "mart_artist_performance.parquet",
+				    Content = if Text.StartsWith(DataLocation, "http")
+				        then Web.Contents(DataLocation & FileName)
+				        else File.Contents(DataLocation & FileName),
+				    Source = Parquet.Document(Binary.Buffer(Content))
+				in
+				    Source
+
+	annotation PBI_ResultType = Table

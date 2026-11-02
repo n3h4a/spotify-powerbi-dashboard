@@ -1,0 +1,4 @@
+expression DataLocation = "https://raw.githubusercontent.com/n3h4a/spotify-powerbi-dashboard/main/powerbi/data/" meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=true]
+	lineageTag: 58b3f80f-c059-5836-8558-9a01dfa0a3d1
+
+	annotation PBI_ResultType = Text

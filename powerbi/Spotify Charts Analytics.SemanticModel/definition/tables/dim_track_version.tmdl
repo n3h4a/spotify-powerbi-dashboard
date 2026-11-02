@@ -1,0 +1,146 @@
+table dim_track_version
+	lineageTag: 29abe6d3-07b0-5ddf-93b8-d68fbd764aa1
+
+	column track_version_key
+		dataType: string
+		isHidden
+		lineageTag: 398fbfca-c321-52bf-9b16-02a3f6800869
+		summarizeBy: none
+		sourceColumn: track_version_key
+
+		annotation SummarizationSetBy = User
+
+	column track_key
+		dataType: string
+		isHidden
+		lineageTag: da35640b-fd3a-57ad-a8fc-6a98160637f9
+		summarizeBy: none
+		sourceColumn: track_key
+
+		annotation SummarizationSetBy = User
+
+	column version_number
+		dataType: int64
+		formatString: 0
+		lineageTag: c348b68d-e8df-5284-adbd-ffc36ff5a69f
+		summarizeBy: none
+		sourceColumn: version_number
+
+		annotation SummarizationSetBy = User
+
+	column artist_credit
+		dataType: string
+		lineageTag: 3ea044d8-2cee-5399-9632-6646fd149ff1
+		summarizeBy: none
+		sourceColumn: artist_credit
+
+		annotation SummarizationSetBy = User
+
+	column album_type
+		dataType: string
+		lineageTag: f0724434-77f6-55a8-833c-404e9935c90d
+		summarizeBy: none
+		sourceColumn: album_type
+
+		annotation SummarizationSetBy = User
+
+	column album_total_tracks
+		dataType: int64
+		formatString: 0
+		lineageTag: afb71c8d-dfe9-5928-84a8-5c88cf68a018
+		summarizeBy: none
+		sourceColumn: album_total_tracks
+
+		annotation SummarizationSetBy = User
+
+	column duration_ms
+		dataType: int64
+		formatString: 0
+		lineageTag: cb1a6b18-764d-5b4b-9cee-e3ab8c9c5038
+		summarizeBy: none
+		sourceColumn: duration_ms
+
+		annotation SummarizationSetBy = User
+
+	column duration_minutes
+		dataType: double
+		formatString: #,0.00
+		lineageTag: 9d6b2348-59f8-5f97-acdc-03230a1edd42
+		summarizeBy: none
+		sourceColumn: duration_minutes
+
+		annotation SummarizationSetBy = User
+
+	column is_explicit
+		dataType: boolean
+		lineageTag: 85972722-1ca6-55c9-a814-380ec2fad061
+		summarizeBy: none
+		sourceColumn: is_explicit
+
+		annotation SummarizationSetBy = User
+
+	column release_date
+		dataType: dateTime
+		formatString: yyyy-mm-dd
+		lineageTag: 2cb3df87-55ef-53bf-a61a-292fc7456435
+		summarizeBy: none
+		sourceColumn: release_date
+
+		annotation SummarizationSetBy = User
+
+	column release_date_precision
+		dataType: string
+		lineageTag: 6bb8c1f6-eda9-56e9-bcf0-b83531dda394
+		summarizeBy: none
+		sourceColumn: release_date_precision
+
+		annotation SummarizationSetBy = User
+
+	column album_cover_url
+		dataType: string
+		lineageTag: 4de817f3-d834-56cb-af70-e08124c037e4
+		summarizeBy: none
+		sourceColumn: album_cover_url
+		dataCategory: ImageUrl
+
+		annotation SummarizationSetBy = User
+
+	column valid_from
+		dataType: dateTime
+		formatString: yyyy-mm-dd
+		lineageTag: 2da7c381-3ac8-55e0-b850-6b6e152fd8da
+		summarizeBy: none
+		sourceColumn: valid_from
+
+		annotation SummarizationSetBy = User
+
+	column valid_to
+		dataType: dateTime
+		formatString: yyyy-mm-dd
+		lineageTag: fe1a825b-26d7-5c8d-81b1-eb16e9fef5ff
+		summarizeBy: none
+		sourceColumn: valid_to
+
+		annotation SummarizationSetBy = User
+
+	column is_current
+		dataType: boolean
+		lineageTag: f34b5cc4-d292-52e8-b609-d5840dd40959
+		summarizeBy: none
+		sourceColumn: is_current
+
+		annotation SummarizationSetBy = User
+
+	partition dim_track_version = m
+		mode: import
+		source =
+				let
+				    FileName = "dim_track_version.parquet",
+				    Content = if Text.StartsWith(DataLocation, "http")
+				        then Web.Contents(DataLocation & FileName)
+				        else File.Contents(DataLocation & FileName),
+				    Source = Parquet.Document(Binary.Buffer(Content))
+				in
+				    Source
+
+	annotation PBI_ResultType = Table

@@ -1,0 +1,167 @@
+table mart_daily_chart
+	lineageTag: 918cf5c3-2073-5381-bd92-3d461befe0c7
+
+	measure 'Avg Artist HHI' = AVERAGE ( mart_daily_chart[artist_hhi] )
+		formatString: #,0
+		displayFolder: Chart health
+		lineageTag: f97eef9e-fcb8-5e30-bb06-1d7b6c452b1f
+
+	measure 'Holiday Track Share' = AVERAGE ( mart_daily_chart[holiday_track_share] )
+		formatString: 0.0%
+		displayFolder: Chart health
+		lineageTag: 23069a75-8d35-5a9e-858c-94e3650d9e06
+
+	measure 'Collaboration Share' = AVERAGE ( mart_daily_chart[collaboration_share] )
+		formatString: 0.0%
+		displayFolder: Chart health
+		lineageTag: ffda8d64-810e-5973-aa48-740eb7f659b1
+
+	column date_key
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: dca8b001-3ded-538a-8de4-786278d9ebf1
+		summarizeBy: none
+		sourceColumn: date_key
+
+		annotation SummarizationSetBy = User
+
+	column chart_date
+		dataType: dateTime
+		formatString: yyyy-mm-dd
+		lineageTag: f0a98087-6e51-520d-8a42-9e31da31de61
+		summarizeBy: none
+		sourceColumn: chart_date
+
+		annotation SummarizationSetBy = User
+
+	column n_debuts
+		dataType: int64
+		formatString: 0
+		lineageTag: 180d46c9-6999-527f-86c5-7e3bc555b41a
+		summarizeBy: none
+		sourceColumn: n_debuts
+
+		annotation SummarizationSetBy = User
+
+	column n_reentries
+		dataType: int64
+		formatString: 0
+		lineageTag: 173ee336-19ea-5ee4-80d3-d11d5c43683d
+		summarizeBy: none
+		sourceColumn: n_reentries
+
+		annotation SummarizationSetBy = User
+
+	column turnover_rate
+		dataType: double
+		formatString: 0.0%
+		lineageTag: 15c4aa2c-6ff1-5116-9797-d2985d68f524
+		summarizeBy: none
+		sourceColumn: turnover_rate
+
+		annotation SummarizationSetBy = User
+
+	column n_distinct_artists
+		dataType: int64
+		formatString: 0
+		lineageTag: d858b109-7c7c-5d3c-bbd2-8d6c014335c0
+		summarizeBy: none
+		sourceColumn: n_distinct_artists
+
+		annotation SummarizationSetBy = User
+
+	column artist_hhi
+		dataType: int64
+		formatString: 0
+		lineageTag: ef873847-8ecb-55b6-b320-124effc9a1c3
+		summarizeBy: none
+		sourceColumn: artist_hhi
+
+		annotation SummarizationSetBy = User
+
+	column top_artist_share
+		dataType: double
+		formatString: 0.0%
+		lineageTag: cb3379b7-8500-5f51-b199-a91d73fb7952
+		summarizeBy: none
+		sourceColumn: top_artist_share
+
+		annotation SummarizationSetBy = User
+
+	column avg_popularity
+		dataType: double
+		formatString: #,0.00
+		lineageTag: 46845899-12b1-57c6-8b80-b865dce48417
+		summarizeBy: none
+		sourceColumn: avg_popularity
+
+		annotation SummarizationSetBy = User
+
+	column explicit_share
+		dataType: double
+		formatString: 0.0%
+		lineageTag: 09a8ed51-6d66-5793-b41c-a98484dfdffe
+		summarizeBy: none
+		sourceColumn: explicit_share
+
+		annotation SummarizationSetBy = User
+
+	column single_share
+		dataType: double
+		formatString: 0.0%
+		lineageTag: 14755af0-5bb2-5d18-bce0-b2a74c1a5799
+		summarizeBy: none
+		sourceColumn: single_share
+
+		annotation SummarizationSetBy = User
+
+	column collaboration_share
+		dataType: double
+		formatString: 0.0%
+		lineageTag: 63aa3f78-c09d-5ce8-a96b-6090a4312e0d
+		summarizeBy: none
+		sourceColumn: collaboration_share
+
+		annotation SummarizationSetBy = User
+
+	column holiday_track_share
+		dataType: double
+		formatString: 0.0%
+		lineageTag: d5ab2b89-8b23-5f54-8bf6-40e1f055da56
+		summarizeBy: none
+		sourceColumn: holiday_track_share
+
+		annotation SummarizationSetBy = User
+
+	column catalog_share
+		dataType: double
+		formatString: 0.0%
+		lineageTag: b5bbd667-4a30-5be1-90bf-80f610f2e8e6
+		summarizeBy: none
+		sourceColumn: catalog_share
+
+		annotation SummarizationSetBy = User
+
+	column median_duration_minutes
+		dataType: double
+		formatString: #,0.00
+		lineageTag: 0a7856dd-6a42-52c3-b344-2e97e05c9c36
+		summarizeBy: none
+		sourceColumn: median_duration_minutes
+
+		annotation SummarizationSetBy = User
+
+	partition mart_daily_chart = m
+		mode: import
+		source =
+				let
+				    FileName = "mart_daily_chart.parquet",
+				    Content = if Text.StartsWith(DataLocation, "http")
+				        then Web.Contents(DataLocation & FileName)
+				        else File.Contents(DataLocation & FileName),
+				    Source = Parquet.Document(Binary.Buffer(Content))
+				in
+				    Source
+
+	annotation PBI_ResultType = Table

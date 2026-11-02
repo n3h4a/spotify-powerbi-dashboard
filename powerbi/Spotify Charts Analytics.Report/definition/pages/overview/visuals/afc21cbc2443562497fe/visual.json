@@ -1,0 +1,96 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.2.0/schema.json",
+  "name": "afc21cbc2443562497fe",
+  "position": {
+    "x": 800,
+    "y": 208,
+    "z": 7000,
+    "width": 456,
+    "height": 496,
+    "tabOrder": 7000
+  },
+  "visual": {
+    "visualType": "clusteredBarChart",
+    "query": {
+      "queryState": {
+        "Category": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "dim_artist"
+                    }
+                  },
+                  "Property": "artist_name"
+                }
+              },
+              "queryRef": "dim_artist.artist_name",
+              "nativeQueryRef": "artist_name"
+            }
+          ]
+        },
+        "Y": {
+          "projections": [
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fact_chart_entry"
+                    }
+                  },
+                  "Property": "Artist Share of Chart"
+                }
+              },
+              "queryRef": "fact_chart_entry.Artist Share of Chart",
+              "nativeQueryRef": "Artist Share of Chart"
+            }
+          ]
+        }
+      },
+      "sortDefinition": {
+        "sort": [
+          {
+            "field": {
+              "Measure": {
+                "Expression": {
+                  "SourceRef": {
+                    "Entity": "fact_chart_entry"
+                  }
+                },
+                "Property": "Artist Share of Chart"
+              }
+            },
+            "direction": "Descending"
+          }
+        ],
+        "isDefaultSort": false
+      }
+    },
+    "drillFilterOtherVisuals": true,
+    "visualContainerObjects": {
+      "title": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "text": {
+              "expr": {
+                "Literal": {
+                  "Value": "'Share of chart by artist (collaborations split fairly)'"
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

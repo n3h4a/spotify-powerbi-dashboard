@@ -1,0 +1,38 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.2.0/schema.json",
+  "name": "06fec49c436f5071a596",
+  "position": {
+    "x": 24,
+    "y": 88,
+    "z": 1000,
+    "width": 232,
+    "height": 104,
+    "tabOrder": 1000
+  },
+  "visual": {
+    "visualType": "card",
+    "query": {
+      "queryState": {
+        "Values": {
+          "projections": [
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fact_chart_entry"
+                    }
+                  },
+                  "Property": "Chart Entries"
+                }
+              },
+              "queryRef": "fact_chart_entry.Chart Entries",
+              "nativeQueryRef": "Chart Entries"
+            }
+          ]
+        }
+      }
+    },
+    "drillFilterOtherVisuals": true
+  }
+}

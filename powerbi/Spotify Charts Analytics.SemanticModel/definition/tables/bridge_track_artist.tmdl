@@ -1,0 +1,77 @@
+table bridge_track_artist
+	lineageTag: a821cbc7-38da-5598-8de4-9554b4d01e02
+
+	column track_key
+		dataType: string
+		isHidden
+		lineageTag: b9863699-39fd-5d12-91b1-940650a88705
+		summarizeBy: none
+		sourceColumn: track_key
+
+		annotation SummarizationSetBy = User
+
+	column artist_key
+		dataType: string
+		isHidden
+		lineageTag: 975664f9-1224-5c88-920f-5a7cb2195d7b
+		summarizeBy: none
+		sourceColumn: artist_key
+
+		annotation SummarizationSetBy = User
+
+	column credit_order
+		dataType: int64
+		formatString: 0
+		lineageTag: 967c9bb1-aaf4-5f08-a2cf-49101a03b71c
+		summarizeBy: none
+		sourceColumn: credit_order
+
+		annotation SummarizationSetBy = User
+
+	column is_lead_artist
+		dataType: boolean
+		lineageTag: c83a501d-1181-52e5-a497-2fda62e65611
+		summarizeBy: none
+		sourceColumn: is_lead_artist
+
+		annotation SummarizationSetBy = User
+
+	column artist_role
+		dataType: string
+		lineageTag: 6163afaf-8b5d-545b-94a2-61f791a28f17
+		summarizeBy: none
+		sourceColumn: artist_role
+
+		annotation SummarizationSetBy = User
+
+	column n_credited_artists
+		dataType: int64
+		formatString: 0
+		lineageTag: 5b13b4d3-407e-5dff-b1b7-810218543dfe
+		summarizeBy: none
+		sourceColumn: n_credited_artists
+
+		annotation SummarizationSetBy = User
+
+	column attribution_weight
+		dataType: double
+		formatString: #,0.00
+		lineageTag: b772b06c-1c4d-5824-8f81-7beb46bc4af0
+		summarizeBy: none
+		sourceColumn: attribution_weight
+
+		annotation SummarizationSetBy = User
+
+	partition bridge_track_artist = m
+		mode: import
+		source =
+				let
+				    FileName = "bridge_track_artist.parquet",
+				    Content = if Text.StartsWith(DataLocation, "http")
+				        then Web.Contents(DataLocation & FileName)
+				        else File.Contents(DataLocation & FileName),
+				    Source = Parquet.Document(Binary.Buffer(Content))
+				in
+				    Source
+
+	annotation PBI_ResultType = Table

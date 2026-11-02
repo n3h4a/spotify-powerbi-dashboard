@@ -1,0 +1,149 @@
+table dim_date
+	lineageTag: bf880acf-a758-5479-a301-b58d922bbd56
+	dataCategory: Time
+
+	column date_key
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 6f3c38f0-0672-5438-b1f7-308a8d2972d6
+		summarizeBy: none
+		sourceColumn: date_key
+
+		annotation SummarizationSetBy = User
+
+	column calendar_date
+		dataType: dateTime
+		isKey
+		formatString: yyyy-mm-dd
+		lineageTag: 22c1cd18-6f13-5fe2-8d31-efbb42251862
+		summarizeBy: none
+		sourceColumn: calendar_date
+
+		annotation SummarizationSetBy = User
+
+	column year
+		dataType: int64
+		formatString: 0
+		lineageTag: c949c6a0-5f17-5364-ad52-21f08f5635ca
+		summarizeBy: none
+		sourceColumn: year
+
+		annotation SummarizationSetBy = User
+
+	column quarter
+		dataType: int64
+		formatString: 0
+		lineageTag: 1b746215-c543-59b1-bdc2-7c8a078bee44
+		summarizeBy: none
+		sourceColumn: quarter
+
+		annotation SummarizationSetBy = User
+
+	column year_quarter
+		dataType: string
+		lineageTag: 0f491323-a6f6-5735-a105-959d42e3ff5a
+		summarizeBy: none
+		sourceColumn: year_quarter
+
+		annotation SummarizationSetBy = User
+
+	column month
+		dataType: int64
+		formatString: 0
+		lineageTag: c9054ea6-3327-51fb-9d52-0cc25349893b
+		summarizeBy: none
+		sourceColumn: month
+
+		annotation SummarizationSetBy = User
+
+	column month_name
+		dataType: string
+		lineageTag: e3270a33-6bab-52db-aceb-b3ef0c6c0af9
+		summarizeBy: none
+		sourceColumn: month_name
+		sortByColumn: month
+
+		annotation SummarizationSetBy = User
+
+	column year_month
+		dataType: string
+		lineageTag: d478adc7-d0aa-58cc-9cb1-9d2f2fc45f38
+		summarizeBy: none
+		sourceColumn: year_month
+
+		annotation SummarizationSetBy = User
+
+	column iso_year
+		dataType: int64
+		formatString: 0
+		lineageTag: f45baa52-8a2a-54cf-8914-8855b75a8ac7
+		summarizeBy: none
+		sourceColumn: iso_year
+
+		annotation SummarizationSetBy = User
+
+	column iso_week
+		dataType: int64
+		formatString: 0
+		lineageTag: 33893605-8e6d-5342-982a-fd5a4f637b4f
+		summarizeBy: none
+		sourceColumn: iso_week
+
+		annotation SummarizationSetBy = User
+
+	column day_of_week
+		dataType: int64
+		formatString: 0
+		lineageTag: b0b26212-1536-5105-802b-36915d915766
+		summarizeBy: none
+		sourceColumn: day_of_week
+
+		annotation SummarizationSetBy = User
+
+	column day_name
+		dataType: string
+		lineageTag: be552897-bd30-5d4f-9824-a0be28632a1d
+		summarizeBy: none
+		sourceColumn: day_name
+		sortByColumn: day_of_week
+
+		annotation SummarizationSetBy = User
+
+	column is_weekend
+		dataType: boolean
+		lineageTag: f4298c4e-c345-5bdc-be87-616fd6a31a53
+		summarizeBy: none
+		sourceColumn: is_weekend
+
+		annotation SummarizationSetBy = User
+
+	column is_holiday_season
+		dataType: boolean
+		lineageTag: 2bba14a6-901a-5603-a712-661ca9adee7e
+		summarizeBy: none
+		sourceColumn: is_holiday_season
+
+		annotation SummarizationSetBy = User
+
+	column has_chart_snapshot
+		dataType: boolean
+		lineageTag: 48794690-6fb7-5df8-8408-e7bc04d22889
+		summarizeBy: none
+		sourceColumn: has_chart_snapshot
+
+		annotation SummarizationSetBy = User
+
+	partition dim_date = m
+		mode: import
+		source =
+				let
+				    FileName = "dim_date.parquet",
+				    Content = if Text.StartsWith(DataLocation, "http")
+				        then Web.Contents(DataLocation & FileName)
+				        else File.Contents(DataLocation & FileName),
+				    Source = Parquet.Document(Binary.Buffer(Content))
+				in
+				    Source
+
+	annotation PBI_ResultType = Table

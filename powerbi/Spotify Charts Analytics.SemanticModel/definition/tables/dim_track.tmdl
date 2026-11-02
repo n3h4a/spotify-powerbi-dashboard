@@ -1,0 +1,68 @@
+table dim_track
+	lineageTag: 6953e457-a7c0-53d4-9df1-d358d4883f37
+
+	column track_key
+		dataType: string
+		isHidden
+		lineageTag: 37d3053a-594f-5429-8a15-222b0515d124
+		summarizeBy: none
+		sourceColumn: track_key
+
+		annotation SummarizationSetBy = User
+
+	column track_title
+		dataType: string
+		lineageTag: eecb1e3f-351d-57dd-8bcf-0eab59e97532
+		summarizeBy: none
+		sourceColumn: track_title
+
+		annotation SummarizationSetBy = User
+
+	column lead_artist_name
+		dataType: string
+		lineageTag: f589daf0-1ff9-5c5c-a26b-b5899e6a9446
+		summarizeBy: none
+		sourceColumn: lead_artist_name
+
+		annotation SummarizationSetBy = User
+
+	column lead_artist_key
+		dataType: string
+		isHidden
+		lineageTag: c97c106b-5613-57f9-9b3b-b033ae3a1d26
+		summarizeBy: none
+		sourceColumn: lead_artist_key
+
+		annotation SummarizationSetBy = User
+
+	column first_chart_date
+		dataType: dateTime
+		formatString: yyyy-mm-dd
+		lineageTag: 3623a9dd-c187-5e10-956f-94bf8f53fe08
+		summarizeBy: none
+		sourceColumn: first_chart_date
+
+		annotation SummarizationSetBy = User
+
+	column last_chart_date
+		dataType: dateTime
+		formatString: yyyy-mm-dd
+		lineageTag: 69f4bc9d-aeac-5264-a8bb-6e48f5ab03d3
+		summarizeBy: none
+		sourceColumn: last_chart_date
+
+		annotation SummarizationSetBy = User
+
+	partition dim_track = m
+		mode: import
+		source =
+				let
+				    FileName = "dim_track.parquet",
+				    Content = if Text.StartsWith(DataLocation, "http")
+				        then Web.Contents(DataLocation & FileName)
+				        else File.Contents(DataLocation & FileName),
+				    Source = Parquet.Document(Binary.Buffer(Content))
+				in
+				    Source
+
+	annotation PBI_ResultType = Table

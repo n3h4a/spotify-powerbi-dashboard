@@ -1,0 +1,11 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
+  "metadata": {
+    "type": "SemanticModel",
+    "displayName": "Spotify Charts Analytics"
+  },
+  "config": {
+    "version": "2.0",
+    "logicalId": "4a1bdbe2-515a-5ef2-95a7-2144af10441c"
+  }
+}

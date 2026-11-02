@@ -1,0 +1,31 @@
+relationship e9b8bb0e-073f-5b94-9b2e-9027e9319013
+	fromColumn: fact_chart_entry.date_key
+	toColumn: dim_date.date_key
+
+relationship 85465a49-9a71-530c-b9cd-7e3ee2ce9c6f
+	fromColumn: fact_chart_entry.track_key
+	toColumn: dim_track.track_key
+
+relationship 787bc294-c131-5af2-bb36-3bb7ebdd5425
+	fromColumn: fact_chart_entry.track_version_key
+	toColumn: dim_track_version.track_version_key
+
+relationship dc82e45a-da93-5bc6-9edb-362172156eec
+	fromColumn: bridge_track_artist.track_key
+	toColumn: dim_track.track_key
+
+relationship 8dc9fd72-281b-5105-9137-60421eeb4f9f
+	fromColumn: bridge_track_artist.artist_key
+	toColumn: dim_artist.artist_key
+
+relationship 54fbb5ab-a117-5ae1-a67f-9ab5d56434b0
+	fromColumn: mart_track_performance.track_key
+	toColumn: dim_track.track_key
+
+relationship 929444dc-76b3-5670-81eb-52f4fb45b739
+	fromColumn: mart_daily_chart.date_key
+	toColumn: dim_date.date_key
+
+relationship 978a5dde-2b10-572a-b2bb-7fba8271e275
+	fromColumn: mart_artist_performance.artist_key
+	toColumn: dim_artist.artist_key
