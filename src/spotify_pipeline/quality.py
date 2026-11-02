@@ -311,6 +311,76 @@ CHECKS: tuple[Check, ...] = (
            OR peak_position_to_date > chart_position
         """,
     ),
+    # ---------------------------------------------------------------- marts reconcile to the fact
+    Check(
+        "track_mart_reconciles_to_fact",
+        "reconciliation",
+        "error",
+        "mart_track_performance has one row per track and its chart days sum to the fact.",
+        """
+        SELECT m.n_rows, m.chart_days, t.n_tracks, f.n_entries
+        FROM (SELECT count(*) AS n_rows, sum(total_chart_days) AS chart_days
+              FROM marts.mart_track_performance) AS m,
+             (SELECT count(*) AS n_tracks FROM gold.dim_track) AS t,
+             (SELECT count(*) AS n_entries FROM gold.fact_chart_entry) AS f
+        WHERE m.n_rows <> t.n_tracks OR m.chart_days <> f.n_entries
+        """,
+    ),
+    Check(
+        "artist_mart_weights_reconcile",
+        "reconciliation",
+        "error",
+        "Weighted artist chart days sum exactly to the number of chart entries.",
+        """
+        SELECT a.weighted, f.n_entries
+        FROM (SELECT sum(weighted_chart_days) AS weighted FROM marts.mart_artist_performance) AS a,
+             (SELECT count(*) AS n_entries FROM gold.fact_chart_entry) AS f
+        WHERE abs(a.weighted - f.n_entries) > 0.5
+        """,
+    ),
+    Check(
+        "daily_mart_one_row_per_snapshot",
+        "reconciliation",
+        "error",
+        "mart_daily_chart has exactly one row per chart snapshot.",
+        """
+        SELECT d.n_rows, f.n_days
+        FROM (SELECT count(*) AS n_rows, count(DISTINCT chart_date) AS n_dates
+              FROM marts.mart_daily_chart) AS d,
+             (SELECT count(DISTINCT chart_date) AS n_days FROM gold.fact_chart_entry) AS f
+        WHERE d.n_rows <> f.n_days OR d.n_dates <> f.n_days
+        """,
+    ),
+    Check(
+        "track_mart_metrics_consistent",
+        "business rule",
+        "error",
+        "Peak is never worse than debut, and chart-day counts are internally consistent.",
+        """
+        SELECT track_title, debut_position, peak_position, total_chart_days,
+               chart_days_first_180, longest_streak_days
+        FROM marts.mart_track_performance
+        WHERE peak_position > debut_position
+           OR chart_days_first_180 > total_chart_days
+           OR longest_streak_days > total_chart_days
+           OR days_at_no1 > days_in_top10
+           OR (peaked_on_debut AND peak_position <> debut_position)
+        """,
+    ),
+    Check(
+        "daily_mart_shares_in_range",
+        "validity",
+        "error",
+        "Daily shares lie in [0, 1] and HHI in [0, 10000].",
+        """
+        SELECT * FROM marts.mart_daily_chart
+        WHERE turnover_rate NOT BETWEEN 0 AND 1
+           OR explicit_share NOT BETWEEN 0 AND 1
+           OR collaboration_share NOT BETWEEN 0 AND 1
+           OR holiday_track_share NOT BETWEEN 0 AND 1
+           OR artist_hhi NOT BETWEEN 0 AND 10000
+        """,
+    ),
     # ---------------------------------------------------------------- known source issues (warn)
     Check(
         "missing_snapshot_days",
