@@ -1,0 +1,18 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+
+# Pipeline outputs (fully reproducible with `make all`)
+warehouse/
+exports/
+
+# OS / editors
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
