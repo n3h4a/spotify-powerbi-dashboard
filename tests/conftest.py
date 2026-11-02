@@ -36,10 +36,10 @@ ROWS = [
 ]
 
 
-def write_fixture_csv(path: Path) -> Path:
+def write_fixture_csv(path: Path, extra_rows: list[str] | None = None) -> Path:
     # Reproduce the real file's mixed line endings: first day LF, the rest CRLF.
     lf_part = "\n".join([HEADER, *ROWS[:3]]) + "\n"
-    crlf_part = "\r\n".join(ROWS[3:]) + "\r\n"
+    crlf_part = "\r\n".join(ROWS[3:] + (extra_rows or [])) + "\r\n"
     path.write_bytes((lf_part + crlf_part).encode("utf-8"))
     return path
 

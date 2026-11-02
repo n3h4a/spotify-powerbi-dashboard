@@ -28,7 +28,11 @@ MART_TABLES = (
     "mart_artist_performance",
     "mart_daily_chart",
 )
-EXPORT_TABLES = tuple(f"gold.{t}" for t in GOLD_TABLES) + tuple(f"marts.{t}" for t in MART_TABLES)
+EXPORT_TABLES = (
+    tuple(f"gold.{t}" for t in GOLD_TABLES)
+    + tuple(f"marts.{t}" for t in MART_TABLES)
+    + ("ml.track_features",)
+)
 
 
 @dataclass(frozen=True)
@@ -87,6 +91,7 @@ STEPS: tuple[Step, ...] = (
     Step("marts", "mart_track_performance", _sql_step("marts/mart_track_performance.sql")),
     Step("marts", "mart_artist_performance", _sql_step("marts/mart_artist_performance.sql")),
     Step("marts", "mart_daily_chart", _sql_step("marts/mart_daily_chart.sql")),
+    Step("ml", "track_features", _sql_step("ml/track_features.sql")),
 )
 
 
@@ -100,7 +105,7 @@ def build(con: duckdb.DuckDBPyConnection, settings: Settings) -> None:
     """Run every step in order. Each step is a full, idempotent rebuild of its table."""
     if not settings.raw_csv.exists():
         raise FileNotFoundError(f"Source file not found: {settings.raw_csv}")
-    for schema in ("bronze", "silver", "gold", "marts"):
+    for schema in ("bronze", "silver", "gold", "marts", "ml"):
         con.execute(f"CREATE SCHEMA IF NOT EXISTS {schema}")
     for step in STEPS:
         started = time.perf_counter()
