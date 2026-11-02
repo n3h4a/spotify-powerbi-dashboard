@@ -381,6 +381,60 @@ CHECKS: tuple[Check, ...] = (
            OR artist_hhi NOT BETWEEN 0 AND 10000
         """,
     ),
+    # ---------------------------------------------------------------- ML feature table
+    Check(
+        "ml_features_one_row_per_debut",
+        "reconciliation",
+        "error",
+        "ml.track_features has exactly one row per track with a known debut.",
+        """
+        SELECT m.n_rows, m.n_keys, t.n_tracks
+        FROM (SELECT count(*) AS n_rows, count(DISTINCT track_key) AS n_keys
+              FROM ml.track_features) AS m,
+             (SELECT count(*) AS n_tracks FROM marts.mart_track_performance
+              WHERE NOT is_left_censored) AS t
+        WHERE m.n_rows <> t.n_tracks OR m.n_keys <> t.n_tracks
+        """,
+    ),
+    Check(
+        "ml_features_complete",
+        "completeness",
+        "error",
+        "No model feature is NULL or NaN (models would silently drop or crash on them).",
+        """
+        SELECT track_title, debut_date FROM ml.track_features
+        WHERE debut_position IS NULL OR debut_popularity IS NULL OR release_age_days IS NULL
+           OR duration_minutes IS NULL OR isnan(duration_minutes)
+           OR artist_prior_tracks IS NULL OR artist_prior_chart_days IS NULL
+           OR w1_chart_days IS NULL OR w1_best_position IS NULL OR w1_max_popularity IS NULL
+           OR w1_day7_position IS NULL OR w1_position_change IS NULL
+           OR w1_position_slope IS NULL OR isnan(w1_position_slope)
+        """,
+    ),
+    Check(
+        "ml_week_one_window_respected",
+        "business rule",
+        "error",
+        "Week-one features describe at most 7 days, starting at the debut.",
+        """
+        SELECT track_title, w1_chart_days, debut_position, w1_best_position, w1_day7_position
+        FROM ml.track_features
+        WHERE w1_chart_days NOT BETWEEN 1 AND 7
+           OR w1_best_position > debut_position
+           OR w1_day7_position NOT BETWEEN 1 AND 51
+           OR w1_climbed <> (w1_best_position < debut_position)
+        """,
+    ),
+    Check(
+        "ml_label_only_when_observable",
+        "business rule",
+        "error",
+        "The 180-day label exists exactly when the full 180-day window is observed.",
+        """
+        SELECT track_title, has_label, lasts_30_days FROM ml.track_features
+        WHERE has_label <> (lasts_30_days IS NOT NULL)
+        """,
+    ),
     # ---------------------------------------------------------------- known source issues (warn)
     Check(
         "missing_snapshot_days",
