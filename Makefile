@@ -1,7 +1,7 @@
 # One-command workflow. Run `make help` to list targets.
 PYTHON ?= python
 
-.PHONY: help install build check export insights model all test lint format clean
+.PHONY: help install build check export insights model powerbi all test lint format clean
 
 help:  ## List available targets
 	@grep -E '^[a-z]+:.*## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*## "} {printf "  %-9s %s\n", $$1, $$2}'
@@ -23,6 +23,9 @@ insights:  ## Run the analyses and regenerate docs/insights.md and docs/figures/
 
 model:  ## Survival analysis + longevity model; regenerates docs/model_report.md
 	$(PYTHON) -m spotify_pipeline model
+
+powerbi:  ## Generate the Power BI project (powerbi/*.pbip) and its data files
+	$(PYTHON) -m spotify_pipeline powerbi
 
 all:  ## build + check + export
 	$(PYTHON) -m spotify_pipeline all

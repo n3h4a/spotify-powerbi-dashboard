@@ -21,10 +21,11 @@ def _parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "command",
-        choices=["build", "check", "export", "insights", "model", "all"],
+        choices=["build", "check", "export", "insights", "model", "powerbi", "all"],
         help="build: run the ELT | check: data-quality suite | export: gold tables to files | "
         "insights: analyses, charts and docs/insights.md | model: survival analysis and "
-        "prediction, docs/model_report.md | all: build + check + export",
+        "prediction, docs/model_report.md | powerbi: generate the Power BI project | "
+        "all: build + check + export",
     )
     parser.add_argument("--raw", type=Path, help="Source CSV (default: dataset/...csv)")
     parser.add_argument("--db", type=Path, help="DuckDB file (default: warehouse/spotify.duckdb)")
@@ -83,6 +84,12 @@ def main(argv: list[str] | None = None) -> int:
             from spotify_pipeline import modeling  # optional deps: pip install -e ".[ml]"
 
             modeling.generate(con, settings.model_report)
+
+        if args.command == "powerbi":
+            from spotify_pipeline import powerbi
+
+            powerbi.generate(con, settings.powerbi_dir)
+            log.info("Power BI project written to %s", settings.powerbi_dir)
     finally:
         con.close()
     return 0

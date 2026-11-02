@@ -18,3 +18,4 @@ class Settings:
     quality_report: Path = PROJECT_ROOT / "docs" / "data_quality_report.md"
     insights_report: Path = PROJECT_ROOT / "docs" / "insights.md"
     model_report: Path = PROJECT_ROOT / "docs" / "model_report.md"
+    powerbi_dir: Path = PROJECT_ROOT / "powerbi"
