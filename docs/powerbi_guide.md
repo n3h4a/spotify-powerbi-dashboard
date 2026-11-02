@@ -1,87 +1,128 @@
-# Power BI Guide: Rebuilding the Dashboard on the Star Schema
+# Power BI Guide
 
-The original dashboard (`dashboard/spotify_dashboard.pbix`) reads the raw CSV directly.
-This guide moves it onto the warehouse's star schema, so every visual uses the cleaned,
-tested data: correct artist counts, point-in-time attributes and chart-movement metrics.
+The dashboard is a **Power BI Project (`.pbip`)**: Microsoft's text-based Power BI
+format, where the semantic model is TMDL and the report is PBIR JSON. It is generated
+from the warehouse by `spotify-pipeline powerbi`, so the model, the measures and the
+data always match the tested pipeline. Every change shows up as a readable diff in git.
 
-## 1. Produce the tables
-
-```bash
-make all   # builds the warehouse and writes exports/*.parquet and exports/*.csv
+```text
+powerbi/
+├── Spotify Charts Analytics.pbip              ← open this in Power BI Desktop
+├── Spotify Charts Analytics.SemanticModel/    ← TMDL: tables, relationships, measures
+├── Spotify Charts Analytics.Report/           ← PBIR: 4 pages of visuals + theme
+├── data/*.parquet                             ← the model's data (~750 KB)
+└── measures.dax                               ← all DAX measures, for reading
 ```
 
-## 2. Load the tables
+## 1. Open it
 
-Power BI Desktop → **Get data → Parquet** (or **Text/CSV**), and load from `exports/`:
+1. Install or update **Power BI Desktop**. Any version from late 2025 onwards reads this
+   project format.
+2. Clone the repo, or download it as a ZIP, and open
+   **`powerbi/Spotify Charts Analytics.pbip`**.
+3. Click **Refresh** (Home ribbon). By default the data loads straight from this GitHub
+   repository, so no local setup is needed. If asked about privacy levels, choose
+   *Public*.
+4. To get a single shareable file, use **File → Save As → Power BI file (.pbix)**.
 
-| Table | Role |
-|---|---|
-| `fact_chart_entry` | Fact: one row per chart day × position |
-| `dim_date` | Date dimension |
-| `dim_track` | Track dimension |
-| `dim_track_version` | Track attributes as of each chart day (SCD2) |
-| `dim_artist` | Artist dimension |
-| `bridge_track_artist` | Track ↔ artist (many-to-many) |
-| `mart_track_performance` | One row per track: debut, peak, longevity |
-| `mart_daily_chart` | One row per day: turnover, concentration, mix |
-| `mart_artist_performance` | One row per artist: ranked chart share |
+### Loading the data from your own disk instead
 
-> Tip: put the export folder path in a Power Query **parameter**, so the report refreshes
-> on any machine after `make all`.
+*Transform data → Edit parameters → `DataLocation`*: set it to a local folder ending in
+a slash, e.g. `C:\code\spotify-powerbi-dashboard\powerbi\data\`. Every table switches
+from `Web.Contents` to `File.Contents` automatically.
 
-## 3. Create the relationships
+## 2. What's inside
 
-Model view. All relationships are single-direction, one-to-many, unless noted.
+### Model
 
-| From (one) | To (many) | Key |
+Nine tables in a star schema: `fact_chart_entry` at the centre; `dim_date` (marked as
+the date table), `dim_track`, `dim_track_version` (SCD2) and `dim_artist` around it;
+`bridge_track_artist` for collaborations; and the three marts.
+
+| From (many) | To (one) | Key |
 |---|---|---|
-| `dim_date` | `fact_chart_entry` | `date_key` |
-| `dim_track` | `fact_chart_entry` | `track_key` |
-| `dim_track_version` | `fact_chart_entry` | `track_version_key` |
-| `dim_track` | `bridge_track_artist` | `track_key` |
-| `dim_artist` | `bridge_track_artist` | `artist_key` |
-| `dim_track` | `mart_track_performance` | `track_key` (one-to-one) |
-| `dim_date` | `mart_daily_chart` | `date_key` |
-| `dim_artist` | `mart_artist_performance` | `artist_key` (one-to-one) |
+| `fact_chart_entry` | `dim_date` | `date_key` |
+| `fact_chart_entry` | `dim_track` | `track_key` |
+| `fact_chart_entry` | `dim_track_version` | `track_version_key` |
+| `bridge_track_artist` | `dim_track` | `track_key` |
+| `bridge_track_artist` | `dim_artist` | `artist_key` |
+| `mart_track_performance` | `dim_track` | `track_key` |
+| `mart_daily_chart` | `dim_date` | `date_key` |
+| `mart_artist_performance` | `dim_artist` | `artist_key` |
 
-Then:
+Design choices:
 
-- **Mark `dim_date` as the date table** (Table tools → Mark as date table → `calendar_date`).
-- **Do not** relate `dim_track_version` to `dim_track`. The fact table already links both,
-  and a second path would make filtering ambiguous.
-- Keep `bridge_track_artist` single-direction. The artist measures use `TREATAS` and
-  `CROSSFILTER` to filter through it only when needed, which avoids the performance cost
-  and ambiguity of bidirectional relationships.
-- Hide every `*_key` column from report view.
-- Sort `dim_date[month_name]` by `dim_date[month]`.
+- **All relationships are single-direction.** The artist measures filter through the
+  bridge with `TREATAS` and `CROSSFILTER` only where needed, which avoids the ambiguity
+  and performance cost of bidirectional relationships.
+- **`dim_track_version` is deliberately not related to `dim_track`.** The fact table
+  links to both, and a second path would make filtering ambiguous.
+- **Implicit measures are discouraged.** Numeric columns don't auto-sum. Every number in
+  a visual comes from an explicit, documented measure.
+- **Auto date/time is off.** `dim_date` is the single date table.
+- Keys are hidden, `month_name` sorts by `month`, `day_name` sorts by `day_of_week`, and
+  album covers are tagged as image URLs.
 
-## 4. Add the measures
+### Measures
 
-Create a blank table called `_Measures`, then add every measure from
-[`powerbi/measures.dax`](../powerbi/measures.dax). Each measure has a comment explaining it.
+20 DAX measures in display folders (Chart, Movement, Artists, Point in time, Track life,
+Chart health). All are listed with descriptions in
+[`powerbi/measures.dax`](../powerbi/measures.dax). Highlights:
 
-## 5. Suggested new page: "Chart Dynamics"
+- **`Artist Weighted Chart Days`** splits each chart entry between collaborators, so
+  totals never double count.
+- **`Single Share` / `Explicit Share`** use the track *version valid on each day* (SCD2),
+  not today's attributes.
+- **`Median Days in First 180`** applies the same censoring rules as the statistical
+  analysis.
 
-Answers the questions in [insights.md](insights.md):
+### Report pages
 
-| Visual | Fields |
+| Page | Contents |
 |---|---|
-| KPI cards | `Median Chart Life (days)`, `Peaked on Debut %`, `Turnover Rate`, `Avg Artist HHI` |
-| Line chart | `dim_date[calendar_date]` × `Avg Artist HHI` (album-drop takeovers) |
-| Area chart | `dim_date[calendar_date]` × `Holiday Track Share`, filtered to Nov–Jan |
-| Clustered bar | `mart_track_performance[peaked_on_debut]` × `Median Days in First 180` |
-| Bar chart | `dim_artist[artist_name]` × `Artist Share of Chart`, Top N = 10 |
-| Table | Track title, lead artist, debut position, peak, total chart days, days at #1 |
-| Slicers | `dim_date[year_quarter]`, `mart_track_performance[is_holiday_track]` |
+| **Overview** | KPI cards (entries, tracks, median chart life, peaked-on-debut %, artist HHI) · daily artist concentration · share of chart by artist |
+| **Chart Dynamics** | Quarter slicer · turnover, holiday, collaboration and explicit shares · the Christmas cliff · longevity by launch shape and by release age |
+| **Tracks** | Lead-artist slicer · every track's debut, peak, chart days, days at #1 and longest streak |
+| **Artists** | Leaderboard by weighted share of chart |
 
-## 6. Check the numbers
+The theme uses the same colour-blind-safe palette as the charts in `docs/figures/`.
 
-These should match the warehouse exactly, because they're the same data:
+## 3. Check the numbers
+
+These must match the warehouse exactly:
 
 | Measure (no filters) | Expected |
 |---|---|
 | `Chart Entries` | 27,800 |
 | `Tracks Charting` | 807 |
 | `Snapshots` | 556 |
-| `Artist Weighted Chart Days` (total row) | 27,800 |
+| `Artist Weighted Chart Days` (total) | 27,800 |
 | `Artist Weighted Chart Days` for Taylor Swift | 1,871 |
+| `Median Chart Life (days)` | 7 (all 807 tracks); 6 with `is_left_censored` = false |
+
+## 4. Editing the report
+
+You can edit freely in Power BI Desktop. Save, and the `.pbip` folders update as
+readable text diffs. Note that `make powerbi` **regenerates** the project from code and
+overwrites manual edits to generated files. So either make lasting changes in
+[`src/spotify_pipeline/powerbi.py`](../src/spotify_pipeline/powerbi.py), or stop
+regenerating once you start customising by hand.
+
+## 5. How it's verified
+
+Power BI Desktop can't run in CI (it's Windows-only), so the project is checked
+statically instead:
+
+- Every PBIR JSON file was validated against **Microsoft's published Fabric JSON
+  schemas** (report 3.0.0, page 2.0.0, visual container 2.2.0).
+- [`tests/test_powerbi.py`](../tests/test_powerbi.py) checks that every field used by a
+  visual exists in the model, every DAX reference resolves, every relationship column
+  exists, TMDL indentation is valid, no Power Query step shadows a library function,
+  the committed data equals the warehouse, and the committed project matches a fresh
+  regeneration.
+
+If Power BI Desktop reports a problem when opening the project, the error message names
+the exact file and line. Open an issue with that message.
+
+The original hand-built dashboard is kept at
+[`dashboard/spotify_dashboard.pbix`](../dashboard/spotify_dashboard.pbix).

@@ -10,7 +10,7 @@
   <img src="https://img.shields.io/badge/DuckDB-SQL-FFF000?logo=duckdb&logoColor=black" alt="DuckDB"/>
   <img src="https://img.shields.io/badge/Power%20BI-Dashboard-F2C811?logo=powerbi&logoColor=black" alt="Power BI"/>
   <img src="https://img.shields.io/badge/scikit--learn-ML-F7931E?logo=scikitlearn&logoColor=white" alt="scikit-learn"/>
-  <img src="https://img.shields.io/badge/tests-53%20passing-0A9EDC?logo=pytest&logoColor=white" alt="pytest"/>
+  <img src="https://img.shields.io/badge/tests-72%20passing-0A9EDC?logo=pytest&logoColor=white" alt="pytest"/>
   <img src="https://img.shields.io/badge/data%20quality-42%20checks-1DB954" alt="Data quality"/>
 </p>
 
@@ -30,8 +30,8 @@
 | **Analysis** | 7 business questions answered in SQL, tested with **Mann-Whitney U** and **Spearman**, written up in a [generated insights report](docs/insights.md) |
 | **Data science** | **Survival analysis** (Kaplan-Meier, log-rank, landmark analysis, Cox model) and a **longevity classifier**: test **ROC-AUC 0.91** on a time-based holdout, documented in a [model report](docs/model_report.md) with a model card |
 | **Quality** | **42 automated data-quality checks**, run in CI, with a [generated report](docs/data_quality_report.md) |
-| **Testing** | 53 tests: unit, integration, corruption tests, a **future-data leakage test**, and a simulation that checks the statistical test is calibrated |
-| **BI** | Interactive 4-page Power BI dashboard, plus a [star-schema model guide](docs/powerbi_guide.md) and [DAX measures](powerbi/measures.dax) |
+| **Testing** | 72 tests: unit, integration, corruption tests, a **future-data leakage test**, and a simulation that checks the statistical test is calibrated |
+| **BI** | **Power BI as code:** a generated Power BI Project (TMDL model + PBIR report, 20 DAX measures, 4 pages) that loads its data from this repo. [Guide](docs/powerbi_guide.md) |
 
 ---
 
@@ -128,7 +128,8 @@ make install   # pip install -e ".[dev]"
 make all       # build warehouse → run quality checks → export tables
 make insights  # run the analyses → docs/insights.md + docs/figures/
 make model     # survival analysis + classifier → docs/model_report.md
-make test      # 53 tests
+make powerbi   # regenerate the Power BI project in powerbi/
+make test      # 72 tests
 ```
 
 ```text
@@ -210,6 +211,26 @@ committed report is out of date.
 
 ## 📊 Power BI dashboard
 
+### Power BI as code
+
+**[`powerbi/Spotify Charts Analytics.pbip`](powerbi/)** is a **Power BI Project**: the semantic
+model is in TMDL and the report in PBIR JSON. It is generated from the warehouse by
+`make powerbi`, version-controlled, and reviewed as text diffs. It contains:
+
+- a **9-table star-schema model** with single-direction relationships, a marked date table
+  and **20 documented DAX measures** (including fair collaboration credit through the bridge
+  table, and point-in-time SCD2 measures)
+- **4 report pages:** Overview, Chart Dynamics, Tracks and Artists, using the project's
+  colour-blind-safe palette as the theme
+- data that **loads straight from this repo**: open the `.pbip` in Power BI Desktop, click
+  *Refresh*, and it works on any machine
+
+Every report file was validated against Microsoft's published JSON schemas, and
+[tests](tests/test_powerbi.py) check that every visual field and DAX reference resolves.
+See the **[Power BI guide](docs/powerbi_guide.md)**.
+
+### Original dashboard (`dashboard/spotify_dashboard.pbix`)
+
 <details open>
 <summary><b>🏠 Home</b>: navigation hub</summary>
 <p align="center"><img src="screenshots/home.png" width="850"/></p>
@@ -230,11 +251,8 @@ committed report is out of date.
 <p align="center"><img src="screenshots/songs.png" width="850"/></p>
 </details>
 
-Open `dashboard/spotify_dashboard.pbix` in Power BI Desktop. To rebuild it on the
-star schema, follow **[docs/powerbi_guide.md](docs/powerbi_guide.md)**: load `exports/`,
-set up the relationships, and paste in the measures from
-[`powerbi/measures.dax`](powerbi/measures.dax). The guide includes a suggested
-"Chart Dynamics" page and the numbers each measure should return.
+This first version was built by hand on the raw CSV; the generated project above
+supersedes it.
 
 ---
 
@@ -257,11 +275,12 @@ spotify-powerbi-dashboard/
 │   ├── quality.py            # data-quality framework + report
 │   ├── insights.py           # statistics, charts and the insights report
 │   ├── modeling.py           # survival analysis, classifiers, model report
-│   └── cli.py                # `spotify-pipeline build | check | export | insights | model | all`
+│   ├── powerbi.py            # generates the Power BI Project
+│   └── cli.py                # `spotify-pipeline build | check | export | insights | model | powerbi | all`
 ├── tests/                    # pytest: unit, integration, corruption tests
 ├── docs/                     # model report, insights, data model, dictionary, quality report, Power BI guide
 │   └── figures/              # generated charts
-├── powerbi/                  # DAX measures
+├── powerbi/                  # Power BI Project (.pbip): TMDL model, PBIR report, data
 ├── dashboard/                # Power BI .pbix
 ├── screenshots/
 ├── .github/workflows/ci.yml  # lint → test → build → enforce data quality
@@ -292,7 +311,7 @@ spotify-powerbi-dashboard/
 | Machine learning | scikit-learn (logistic regression, gradient boosting, permutation importance), statsmodels (Kaplan-Meier, log-rank, Cox PH) |
 | Data quality | Custom SQL-assertion framework with severities and a generated report |
 | Testing & CI | pytest, ruff, GitHub Actions |
-| BI | Power BI (Power Query, DAX) |
+| BI | Power BI: PBIP project format (TMDL, PBIR), Power Query M, DAX |
 
 ---
 
