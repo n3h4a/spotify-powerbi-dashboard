@@ -38,6 +38,8 @@ jobs:
         run: make all
       - name: Generate insights
         run: make insights
+      - name: Survival analysis and longevity model
+        run: make model
       - name: Generated reports are up to date
         run: |
           git diff --exit-code docs/data_quality_report.md docs/insights.md \

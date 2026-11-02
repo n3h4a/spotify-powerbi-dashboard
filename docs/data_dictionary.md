@@ -171,6 +171,24 @@ Business-level tables built on the star schema. Each one reconciles exactly to
 
 ---
 
+# ML features (`ml` schema)
+
+## `ml.track_features`
+
+**Grain:** one row per track with a known debut · **Rows:** 757 ·
+Full method in [model_report.md](model_report.md)
+
+| Column group | Columns | Available at |
+|---|---|---|
+| Launch-day features | `debut_position`, `debut_popularity`, `release_age_days`, `is_new_release`, `is_collaboration`, `n_credited_artists`, `debut_is_explicit`, `is_single`, `duration_minutes`, `debut_in_holiday_season` | Debut day |
+| Artist history | `artist_prior_tracks`, `artist_prior_chart_days` (lead artist's chart presence strictly before the debut date) | Debut day |
+| Week-one features | `w1_chart_days`, `w1_best_position`, `w1_max_popularity`, `w1_on_chart_day7`, `w1_day7_position` (51 = off chart), `w1_position_change`, `w1_position_slope`, `w1_climbed` | Debut + 6 days |
+| Availability | `has_full_week_one`, `has_label` | Data cut-off |
+| Label | `lasts_30_days`: 30+ chart days within 180 days of debut (`NULL` if the window isn't fully observed) | Debut + 180 days |
+| Survival | `chart_life_days` (time), `chart_life_ended` (event: absent for the final 14+ days) | Data cut-off |
+
+---
+
 ## Example queries
 
 **Longest unbroken chart runs**

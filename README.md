@@ -2,15 +2,16 @@
 
 # 🎵 Spotify Global Top 50: Analytics Platform
 
-### An end-to-end data project: a tested ELT pipeline, a star-schema warehouse and a statistical analysis of 18 months of daily Spotify charts, feeding a Power BI dashboard.
+### An end-to-end data project on 18 months of daily Spotify charts: a tested ELT pipeline, a star-schema warehouse, statistical analysis, survival models and a chart-longevity predictor, with a Power BI dashboard on top.
 
 <p>
   <a href="https://github.com/n3h4a/spotify-powerbi-dashboard/actions/workflows/ci.yml"><img src="https://github.com/n3h4a/spotify-powerbi-dashboard/actions/workflows/ci.yml/badge.svg" alt="CI"/></a>
   <img src="https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white" alt="Python"/>
   <img src="https://img.shields.io/badge/DuckDB-SQL-FFF000?logo=duckdb&logoColor=black" alt="DuckDB"/>
   <img src="https://img.shields.io/badge/Power%20BI-Dashboard-F2C811?logo=powerbi&logoColor=black" alt="Power BI"/>
-  <img src="https://img.shields.io/badge/tests-pytest-0A9EDC?logo=pytest&logoColor=white" alt="pytest"/>
-  <img src="https://img.shields.io/badge/data%20quality-38%20checks-1DB954" alt="Data quality"/>
+  <img src="https://img.shields.io/badge/scikit--learn-ML-F7931E?logo=scikitlearn&logoColor=white" alt="scikit-learn"/>
+  <img src="https://img.shields.io/badge/tests-53%20passing-0A9EDC?logo=pytest&logoColor=white" alt="pytest"/>
+  <img src="https://img.shields.io/badge/data%20quality-42%20checks-1DB954" alt="Data quality"/>
 </p>
 
 <img src="docs/figures/02_launch_segments.png" width="820" alt="Tracks that climb outlast tracks that peak on day one"/>
@@ -27,8 +28,9 @@
 | **Pipeline** | Python + SQL on DuckDB, **bronze → silver → gold** layers, one-command rebuild in under 1 s |
 | **Model** | Star schema: 1 fact, 4 dimensions (incl. a **Type 2 slowly changing dimension**), 1 bridge table, plus 3 analytics marts |
 | **Analysis** | 7 business questions answered in SQL, tested with **Mann-Whitney U** and **Spearman**, written up in a [generated insights report](docs/insights.md) |
-| **Quality** | **38 automated data-quality checks**, run in CI, with a [generated report](docs/data_quality_report.md) |
-| **Testing** | 43 unit and integration tests, including tests that corrupt the data on purpose to prove the checks catch it |
+| **Data science** | **Survival analysis** (Kaplan-Meier, log-rank, landmark analysis, Cox model) and a **longevity classifier**: test **ROC-AUC 0.91** on a time-based holdout, documented in a [model report](docs/model_report.md) with a model card |
+| **Quality** | **42 automated data-quality checks**, run in CI, with a [generated report](docs/data_quality_report.md) |
+| **Testing** | 53 tests: unit, integration, corruption tests, a **future-data leakage test**, and a simulation that checks the statistical test is calibrated |
 | **BI** | Interactive 4-page Power BI dashboard, plus a [star-schema model guide](docs/powerbi_guide.md) and [DAX measures](powerbi/measures.dax) |
 
 ---
@@ -54,6 +56,29 @@
 
 ---
 
+## 🤖 Predicting chart longevity
+
+> Full write-up: **[docs/model_report.md](docs/model_report.md)**. It covers framing, leakage controls, validation, survival analysis, a watchlist of recent debuts and a model card.
+
+**Question:** a track has just entered the Global Top 50. Will it chart for 30+ days?
+
+| Model | Information used | Test ROC-AUC [95% CI] | Precision in top 20% |
+|---|---|---:|---:|
+| Debut position only | Debut position | 0.61 [0.52–0.69] | 40% |
+| Launch-day model | 12 features known at debut | 0.71 [0.62–0.78] | 50% |
+| **Week-one model** | **+ 7 features from the first week** | **0.91 [0.87–0.95]** | **82%** |
+
+- **Validated like production:** trained on 2023 debuts and tested on 2024 debuts. Features are point-in-time correct, with a test that rebuilds the warehouse with future data appended and asserts no feature changes. Model selection happens inside the training set only.
+- **Survival analysis instead of dropping unfinished cases:** tracks still charting when the data ends are *censored*. A landmark analysis at day 7 avoids immortal-time bias. Tracks that climbed in week one go on to chart a median **57 more days**, against **8** for those that didn't (log-rank p < 0.001).
+- **The proportional-hazards check is itself tested:** a simulation confirms it fires about 5% of the time when the assumption holds and catches real violations.
+
+<p align="center">
+  <img src="docs/figures/09_roc_curves.png" width="42%" alt="ROC curves"/>
+  <img src="docs/figures/07_landmark_week_one.png" width="56%" alt="Landmark survival analysis"/>
+</p>
+
+---
+
 ## 🏗 Architecture
 
 ```mermaid
@@ -75,13 +100,14 @@ flowchart LR
     OUT[("Parquet / CSV<br/>exports")]
     PBI["📊 Power BI"]
     INS["📈 Insights report<br/>SQL + statistics + charts"]
-    NEXT["🧪 ML models<br/><i>(roadmap)</i>"]
+    ML["🤖 ml.track_features<br/>point-in-time features"]
+    NEXT["🧪 Survival models +<br/>longevity classifier"]
 
     CSV --> B
     M --> DQ --> OUT
     OUT --> PBI
     DQ --> INS
-    OUT --> NEXT
+    M --> ML --> NEXT
 ```
 
 | Layer | What happens | Why |
@@ -101,7 +127,8 @@ cd spotify-powerbi-dashboard
 make install   # pip install -e ".[dev]"
 make all       # build warehouse → run quality checks → export tables
 make insights  # run the analyses → docs/insights.md + docs/figures/
-make test      # 43 tests
+make model     # survival analysis + classifier → docs/model_report.md
+make test      # 53 tests
 ```
 
 ```text
@@ -118,6 +145,7 @@ gold   fact_chart_entry         27800 rows     68 ms
 marts  mart_track_performance     807 rows     22 ms
 marts  mart_artist_performance    346 rows     17 ms
 marts  mart_daily_chart           556 rows     16 ms
+ml     track_features             757 rows     51 ms
 ```
 
 Query the warehouse directly with the DuckDB CLI or Python:
@@ -161,8 +189,8 @@ computed with SQL window functions: `previous_position`, `position_change`,
 
 ## ✅ Data quality
 
-Every run executes **38 checks** in 7 categories: completeness, validity, uniqueness,
-referential integrity, business rules, mart reconciliation and source profiling. Any failed `error` check
+Every run executes **42 checks** in 7 categories: completeness, validity, uniqueness,
+referential integrity, business rules, reconciliation (marts and ML features) and source profiling. Any failed `error` check
 returns a non-zero exit code and turns CI red. The results go to
 **[docs/data_quality_report.md](docs/data_quality_report.md)**, and CI fails if the
 committed report is out of date.
@@ -221,15 +249,17 @@ spotify-powerbi-dashboard/
 │   ├── silver/               # typing, parsing, conforming
 │   ├── gold/                 # star schema (facts, dimensions, bridge)
 │   ├── marts/                # track, artist and daily analytics tables
-│   └── analyses/             # one SQL file per business question
+│   ├── analyses/             # one SQL file per business question
+│   └── ml/                   # point-in-time feature table
 ├── src/spotify_pipeline/
 │   ├── pipeline.py           # orchestration: ordered, timed, idempotent steps
 │   ├── artists.py            # collaboration-credit parser
 │   ├── quality.py            # data-quality framework + report
 │   ├── insights.py           # statistics, charts and the insights report
-│   └── cli.py                # `spotify-pipeline build | check | export | insights | all`
+│   ├── modeling.py           # survival analysis, classifiers, model report
+│   └── cli.py                # `spotify-pipeline build | check | export | insights | model | all`
 ├── tests/                    # pytest: unit, integration, corruption tests
-├── docs/                     # insights, data model, dictionary, quality report, Power BI guide
+├── docs/                     # model report, insights, data model, dictionary, quality report, Power BI guide
 │   └── figures/              # generated charts
 ├── powerbi/                  # DAX measures
 ├── dashboard/                # Power BI .pbix
@@ -245,7 +275,9 @@ spotify-powerbi-dashboard/
 
 - [x] **Phase 1: Data engineering.** Layered ELT, star schema with SCD2, data-quality framework, tests, CI
 - [x] **Phase 2: Analytics.** Marts, 7 business questions in SQL, significance testing, generated insights report, Power BI model guide and DAX measures
-- [ ] **Phase 3: Data science.** Predict chart longevity from first-week signals (time-based validation, SHAP), plus Kaplan-Meier / Cox survival analysis of chart lifespans
+- [x] **Phase 3: Data science.** Survival analysis (Kaplan-Meier, log-rank, landmark, Cox) and a week-one longevity classifier with time-based validation, bootstrap CIs and permutation importance
+- [ ] Time-varying Cox model for the covariates whose effects change over the chart life
+- [ ] Enrich features with audio attributes from a public dataset (fuzzy matching on title and artist)
 - [ ] Incremental, date-partitioned loads and orchestration once the source grows beyond a single file
 
 ---
@@ -257,6 +289,7 @@ spotify-powerbi-dashboard/
 | Storage & compute | DuckDB (embedded OLAP, columnar) |
 | Transformation | SQL (CTEs, window functions, gaps-and-islands), Python |
 | Analysis | SQL, SciPy (Mann-Whitney U, Spearman), Matplotlib |
+| Machine learning | scikit-learn (logistic regression, gradient boosting, permutation importance), statsmodels (Kaplan-Meier, log-rank, Cox PH) |
 | Data quality | Custom SQL-assertion framework with severities and a generated report |
 | Testing & CI | pytest, ruff, GitHub Actions |
 | BI | Power BI (Power Query, DAX) |
