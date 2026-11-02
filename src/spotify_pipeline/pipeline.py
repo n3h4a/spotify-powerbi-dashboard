@@ -1,4 +1,4 @@
-"""Build the warehouse: bronze (raw) -> silver (typed and conformed) -> gold (star schema)."""
+"""Build the warehouse: bronze (raw) -> silver (conformed) -> gold (star schema) -> marts."""
 
 from __future__ import annotations
 
@@ -23,6 +23,12 @@ GOLD_TABLES = (
     "bridge_track_artist",
     "fact_chart_entry",
 )
+MART_TABLES = (
+    "mart_track_performance",
+    "mart_artist_performance",
+    "mart_daily_chart",
+)
+EXPORT_TABLES = tuple(f"gold.{t}" for t in GOLD_TABLES) + tuple(f"marts.{t}" for t in MART_TABLES)
 
 
 @dataclass(frozen=True)
@@ -78,6 +84,9 @@ STEPS: tuple[Step, ...] = (
     Step("gold", "dim_track_version", _sql_step("gold/dim_track_version.sql")),
     Step("gold", "bridge_track_artist", _sql_step("gold/bridge_track_artist.sql")),
     Step("gold", "fact_chart_entry", _sql_step("gold/fact_chart_entry.sql")),
+    Step("marts", "mart_track_performance", _sql_step("marts/mart_track_performance.sql")),
+    Step("marts", "mart_artist_performance", _sql_step("marts/mart_artist_performance.sql")),
+    Step("marts", "mart_daily_chart", _sql_step("marts/mart_daily_chart.sql")),
 )
 
 
@@ -91,7 +100,7 @@ def build(con: duckdb.DuckDBPyConnection, settings: Settings) -> None:
     """Run every step in order. Each step is a full, idempotent rebuild of its table."""
     if not settings.raw_csv.exists():
         raise FileNotFoundError(f"Source file not found: {settings.raw_csv}")
-    for schema in ("bronze", "silver", "gold"):
+    for schema in ("bronze", "silver", "gold", "marts"):
         con.execute(f"CREATE SCHEMA IF NOT EXISTS {schema}")
     for step in STEPS:
         started = time.perf_counter()
@@ -107,14 +116,15 @@ def build(con: duckdb.DuckDBPyConnection, settings: Settings) -> None:
 
 
 def export(con: duckdb.DuckDBPyConnection, export_dir: Path) -> list[Path]:
-    """Write every gold table to Parquet (analytics tools) and CSV (Power BI / Excel)."""
+    """Write gold and mart tables to Parquet (analytics tools) and CSV (Power BI / Excel)."""
     export_dir.mkdir(parents=True, exist_ok=True)
     written: list[Path] = []
-    for table in GOLD_TABLES:
+    for qualified in EXPORT_TABLES:
+        table = qualified.split(".", 1)[1]
         for fmt, ext in (("PARQUET", "parquet"), ("CSV", "csv")):
             target = export_dir / f"{table}.{ext}"
             options = "FORMAT PARQUET" if fmt == "PARQUET" else "FORMAT CSV, HEADER"
             path_literal = target.as_posix().replace("'", "''")
-            con.execute(f"COPY gold.{table} TO '{path_literal}' ({options})")
+            con.execute(f"COPY {qualified} TO '{path_literal}' ({options})")
             written.append(target)
     return written

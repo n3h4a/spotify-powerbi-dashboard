@@ -117,7 +117,7 @@ def test_rebuild_is_idempotent(built, fixture_settings):
     assert rows(built, "SELECT * FROM gold.fact_chart_entry ORDER BY ALL") == before
 
 
-def test_export_writes_every_gold_table(built, fixture_settings):
+def test_export_writes_every_gold_and_mart_table(built, fixture_settings):
     files = pipeline.export(built, fixture_settings.export_dir)
-    assert len(files) == 2 * len(pipeline.GOLD_TABLES)
+    assert len(files) == 2 * len(pipeline.EXPORT_TABLES)
     assert all(f.stat().st_size > 0 for f in files)
