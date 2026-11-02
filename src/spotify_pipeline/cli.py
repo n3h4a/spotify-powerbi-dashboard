@@ -21,9 +21,9 @@ def _parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "command",
-        choices=["build", "check", "export", "all"],
+        choices=["build", "check", "export", "insights", "all"],
         help="build: run the ELT | check: data-quality suite | export: gold tables to files | "
-        "all: build + check + export",
+        "insights: analyses, charts and docs/insights.md | all: build + check + export",
     )
     parser.add_argument("--raw", type=Path, help="Source CSV (default: dataset/...csv)")
     parser.add_argument("--db", type=Path, help="DuckDB file (default: warehouse/spotify.duckdb)")
@@ -72,6 +72,11 @@ def main(argv: list[str] | None = None) -> int:
         if args.command in ("export", "all"):
             files = pipeline.export(con, settings.export_dir)
             log.info("Exported %d files to %s", len(files), settings.export_dir)
+
+        if args.command == "insights":
+            from spotify_pipeline import insights  # optional deps: pip install -e ".[analysis]"
+
+            insights.generate(con, settings.sql_dir, settings.insights_report)
     finally:
         con.close()
     return 0

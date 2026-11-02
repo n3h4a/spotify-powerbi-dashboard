@@ -16,3 +16,4 @@ class Settings:
     seeds_dir: Path = PROJECT_ROOT / "seeds"
     export_dir: Path = PROJECT_ROOT / "exports"
     quality_report: Path = PROJECT_ROOT / "docs" / "data_quality_report.md"
+    insights_report: Path = PROJECT_ROOT / "docs" / "insights.md"
