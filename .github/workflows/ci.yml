@@ -36,12 +36,16 @@ jobs:
       - run: make install
       - name: Build, validate and export
         run: make all
-      - name: Data-quality report is up to date
+      - name: Generate insights
+        run: make insights
+      - name: Generated reports are up to date
         run: |
-          git diff --exit-code docs/data_quality_report.md \
-            || (echo "::error::docs/data_quality_report.md is stale. Run 'make check' and commit it." && exit 1)
+          git diff --exit-code docs/data_quality_report.md docs/insights.md \
+            || (echo "::error::Generated docs are stale. Run 'make check insights' and commit them." && exit 1)
       - uses: actions/upload-artifact@v4
         with:
-          name: gold-tables
-          path: exports/
+          name: warehouse-exports-and-figures
+          path: |
+            exports/
+            docs/figures/
           retention-days: 14

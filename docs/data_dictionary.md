@@ -1,6 +1,7 @@
 # Data Dictionary
 
-All tables live in the `gold` schema of `warehouse/spotify.duckdb`. They are also
+The star schema lives in the `gold` schema of `warehouse/spotify.duckdb`, and the
+analytics marts in the `marts` schema. They are also
 exported to `exports/<table>.parquet` and `exports/<table>.csv` by `make export`.
 Design rationale is in [data_model.md](data_model.md).
 
@@ -104,6 +105,69 @@ Design rationale is in [data_model.md](data_model.md).
 | `is_weekend` | BOOLEAN | Saturday or Sunday. |
 | `is_holiday_season` | BOOLEAN | 15 Nov – 31 Dec, when Christmas music enters the chart. |
 | `has_chart_snapshot` | BOOLEAN | `false` for days with no chart in the source, including the 4 missing days. |
+
+---
+
+# Marts (`marts` schema)
+
+Business-level tables built on the star schema. Each one reconciles exactly to
+`fact_chart_entry`, and the quality suite enforces it.
+
+## `mart_track_performance`
+
+**Grain:** one row per track · **Rows:** 807
+
+| Column | Description |
+|---|---|
+| `track_key`, `track_title`, `lead_artist_name`, `lead_artist_key` | Track identity (see `dim_track`). |
+| `n_credited_artists`, `is_collaboration` | Number of artists ever credited; `true` if more than one. |
+| `debut_date`, `debut_position` | First chart day and position. Not the true debut if `is_left_censored`. |
+| `last_chart_date` | Last chart day in the dataset. |
+| `peak_position`, `first_peak_date` | Best position and the first day it was reached. |
+| `chart_days_debut_to_peak`, `peaked_on_debut` | Chart days from debut to peak; `true` if the peak was the debut day. |
+| `total_chart_days`, `n_reentries`, `longest_streak_days` | Chart life: total days, number of comebacks, longest unbroken run. |
+| `days_at_no1`, `days_in_top10` | Days at #1 and in the top 10. |
+| `avg_popularity`, `max_popularity` | Spotify popularity while charting. |
+| `debut_album_type`, `debut_is_explicit`, `debut_duration_ms` | Attributes of the version that debuted. |
+| `release_date`, `release_date_precision` | Release date of the debut version. |
+| `days_release_to_debut` | Days from release to debut (day-precision dates only). |
+| `release_age_at_debut` | `new release` (≤ 30 days), `recent` (31–365 days) or `catalog` (older). |
+| `is_holiday_track` | ≥ 90% of chart days fall 15 Nov–31 Dec, and released more than a year before debut. |
+| `is_left_censored` | Already charting on the first snapshot, so the real debut is unknown. |
+| `is_right_censored` | Still charting on the last snapshot, so chart life is a lower bound. |
+| `has_full_180_day_window` | Debuted at least 180 days before the last snapshot. |
+| `chart_days_first_180` | Chart days within 180 days of debut: the fair longevity metric. |
+
+## `mart_artist_performance`
+
+**Grain:** one row per artist · **Rows:** 346
+
+| Column | Description |
+|---|---|
+| `artist_rank` | Rank by `weighted_chart_days`. |
+| `artist_key`, `artist_name` | Artist identity. |
+| `n_tracks`, `n_tracks_as_lead`, `n_collaboration_tracks` | Track counts. |
+| `credited_chart_days` | Chart days on which the artist is credited, counted in full. |
+| `weighted_chart_days` | Chart days split between collaborators; sums to 27,800 across all artists. |
+| `share_of_chart` | `weighted_chart_days` / total chart entries. |
+| `days_at_no1`, `days_in_top10`, `best_position` | Peak performance. |
+| `first_chart_date`, `last_chart_date` | Active period. |
+
+## `mart_daily_chart`
+
+**Grain:** one row per snapshot · **Rows:** 556
+
+| Column | Description |
+|---|---|
+| `date_key`, `chart_date` | Snapshot date. |
+| `n_debuts`, `n_reentries` | Tracks new to today's chart (`NULL` on the first snapshot). |
+| `turnover_rate` | (`n_debuts` + `n_reentries`) / 50. |
+| `n_distinct_artists` | Distinct credited artists on the chart. |
+| `artist_hhi` | Herfindahl-Hirschman index of artist concentration (0–10,000). |
+| `top_artist_share` | Share of slots held by the most-present artist. |
+| `avg_popularity` | Mean popularity of the 50 entries. |
+| `explicit_share`, `single_share`, `collaboration_share`, `holiday_track_share`, `catalog_share` | Composition of the chart, using point-in-time attributes. |
+| `median_duration_minutes` | Median track length on the chart. |
 
 ---
 

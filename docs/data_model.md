@@ -12,6 +12,7 @@ For column-level definitions, see the [data dictionary](data_dictionary.md).
 | **Bronze** | `bronze` | Land the source exactly as received, plus lineage (`_source_file`, `_source_row_number`, `_loaded_at`). | Every column is `VARCHAR`. Nothing is rejected, so ingestion never fails because of a bad value. |
 | **Silver** | `silver` | Type, clean and conform. Parse artist credits and resolve each row to a stable track identity. | Typed columns. Bad casts become `NULL` and are caught by the quality suite. |
 | **Gold** | `gold` | Star schema for BI, SQL analytics and machine learning. | Documented grain, unique keys, enforced relationships. |
+| **Marts** | `marts` | Business-level answers: one row per track, artist and day, with censoring flags for honest statistics. | Each mart reconciles exactly to the fact table (enforced by quality checks). |
 
 Each model is a full, idempotent rebuild (`CREATE OR REPLACE`). With 27.8K rows, the
 whole warehouse rebuilds in under a second, so incremental loading would add complexity
