@@ -1,0 +1,47 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test:
+    name: Lint & test (Python ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.10", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+      - run: make install
+      - run: make lint
+      - run: make test
+
+  pipeline:
+    name: Build warehouse & enforce data quality
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+      - run: make install
+      - name: Build, validate and export
+        run: make all
+      - name: Data-quality report is up to date
+        run: |
+          git diff --exit-code docs/data_quality_report.md \
+            || (echo "::error::docs/data_quality_report.md is stale. Run 'make check' and commit it." && exit 1)
+      - uses: actions/upload-artifact@v4
+        with:
+          name: gold-tables
+          path: exports/
+          retention-days: 14
