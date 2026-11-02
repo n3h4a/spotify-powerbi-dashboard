@@ -1,13 +1,13 @@
 # One-command workflow. Run `make help` to list targets.
 PYTHON ?= python
 
-.PHONY: help install build check export insights all test lint format clean
+.PHONY: help install build check export insights model all test lint format clean
 
 help:  ## List available targets
 	@grep -E '^[a-z]+:.*## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*## "} {printf "  %-9s %s\n", $$1, $$2}'
 
 install:  ## Install the pipeline and dev tools in editable mode
-	$(PYTHON) -m pip install -e ".[dev,analysis]"
+	$(PYTHON) -m pip install -e ".[dev,analysis,ml]"
 
 build:  ## Run the ELT: bronze -> silver -> gold
 	$(PYTHON) -m spotify_pipeline build
@@ -20,6 +20,9 @@ export:  ## Write gold tables to exports/ as Parquet and CSV
 
 insights:  ## Run the analyses and regenerate docs/insights.md and docs/figures/
 	$(PYTHON) -m spotify_pipeline insights
+
+model:  ## Survival analysis + longevity model; regenerates docs/model_report.md
+	$(PYTHON) -m spotify_pipeline model
 
 all:  ## build + check + export
 	$(PYTHON) -m spotify_pipeline all

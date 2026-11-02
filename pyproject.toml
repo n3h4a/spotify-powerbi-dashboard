@@ -15,6 +15,7 @@ dependencies = ["duckdb>=1.1"]
 [project.optional-dependencies]
 dev = ["pytest>=8", "ruff>=0.5"]
 analysis = ["scipy>=1.11", "matplotlib>=3.8"]
+ml = ["scikit-learn>=1.4", "statsmodels>=0.14", "pandas>=2.0"]
 
 [project.scripts]
 spotify-pipeline = "spotify_pipeline.cli:main"
