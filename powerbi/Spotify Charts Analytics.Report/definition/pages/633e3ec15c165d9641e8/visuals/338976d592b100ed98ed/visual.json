@@ -27,8 +27,8 @@
                 }
               },
               "queryRef": "fact_chart_entry.Artist Tracks",
-              "nativeQueryRef": "Unique Songs",
-              "displayName": "Unique Songs"
+              "nativeQueryRef": "Songs",
+              "displayName": "Songs"
             }
           ]
         }

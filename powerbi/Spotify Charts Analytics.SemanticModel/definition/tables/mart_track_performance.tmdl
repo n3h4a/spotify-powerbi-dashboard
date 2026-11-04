@@ -43,51 +43,85 @@ table mart_track_performance
 		lineageTag: 89f9d8d5-82df-5e96-869e-ee81244906fc
 
 	measure 'Top Track' =
-			CALCULATE (
-			    MAXX (
-			        TOPN ( 1, VALUES ( dim_track[track_title] ),
-			            CALCULATE ( SUM ( mart_track_performance[total_chart_days] ) ) ),
-			        dim_track[track_title]
-			    ),
-			    CROSSFILTER ( bridge_track_artist[track_key], dim_track[track_key], BOTH )
-			)
+			VAR FocusRank = MIN ( dim_track[chart_rank] )
+			RETURN
+			    CALCULATE ( MAX ( dim_track[track_label] ), dim_track[chart_rank] = FocusRank )
 		displayFolder: Track life
 		lineageTag: 4604cea3-4729-50b9-a433-c72e9492e3c8
 
-	measure 'Peak Position' = MIN ( mart_track_performance[peak_position] )
+	measure 'Peak Position' =
+			VAR FocusRank = MIN ( dim_track[chart_rank] )
+			RETURN
+			    CALCULATE (
+			        MIN ( mart_track_performance[peak_position] ),
+			        dim_track[chart_rank] = FocusRank
+			    )
 		formatString: 0
-		displayFolder: Track life
+		displayFolder: Song
 		lineageTag: 4c89c35c-826f-50b9-be29-661409d7c2e0
 
-	measure 'Debut Position' = MIN ( mart_track_performance[debut_position] )
+	measure 'Debut Position' =
+			VAR FocusRank = MIN ( dim_track[chart_rank] )
+			RETURN
+			    CALCULATE (
+			        MIN ( mart_track_performance[debut_position] ),
+			        dim_track[chart_rank] = FocusRank
+			    )
 		formatString: 0
-		displayFolder: Track life
+		displayFolder: Song
 		lineageTag: 28523857-8785-5fb5-87fb-fa541ee77711
 
-	measure 'Release Year' = YEAR ( MIN ( mart_track_performance[release_date] ) )
+	measure 'Release Year' =
+			VAR FocusRank = MIN ( dim_track[chart_rank] )
+			RETURN
+			    CALCULATE (
+			        YEAR ( MIN ( mart_track_performance[release_date] ) ),
+			        dim_track[chart_rank] = FocusRank
+			    )
 		formatString: 0
-		displayFolder: Track life
+		displayFolder: Song
 		lineageTag: d8f88238-d4fb-505c-8006-6e8546184e29
 
 	measure 'Explicit Label' =
-			IF (
-			    HASONEVALUE ( dim_track[track_key] ),
-			    IF (
-			        CALCULATE (
-			            COUNTROWS ( mart_track_performance ),
-			            mart_track_performance[debut_is_explicit] = TRUE ()
-			        ) > 0,
-			        "Yes",
-			        "No"
-			    ),
-			    "-"
-			)
-		displayFolder: Track life
+			VAR FocusRank = MIN ( dim_track[chart_rank] )
+			VAR IsExplicit =
+			    CALCULATE (
+			        COUNTROWS ( mart_track_performance ),
+			        dim_track[chart_rank] = FocusRank,
+			        mart_track_performance[debut_is_explicit] = TRUE ()
+			    )
+			RETURN
+			    IF ( ISBLANK ( FocusRank ), BLANK (), IF ( IsExplicit > 0, "Yes", "No" ) )
+		displayFolder: Song
 		lineageTag: d809f3e1-492b-5ca3-8c69-a78e0c681aa0
 
-	measure 'Album Type' = SELECTEDVALUE ( mart_track_performance[debut_album_type], "-" )
-		displayFolder: Track life
+	measure 'Album Type' =
+			VAR FocusRank = MIN ( dim_track[chart_rank] )
+			RETURN
+			    CALCULATE (
+			        SELECTEDVALUE ( mart_track_performance[debut_album_type] ),
+			        dim_track[chart_rank] = FocusRank
+			    )
+		displayFolder: Song
 		lineageTag: 21fb8bc9-5f35-54c1-b71d-5525725a887b
+
+	measure Song =
+			VAR FocusRank = MIN ( dim_track[chart_rank] )
+			RETURN
+			    CALCULATE ( MAX ( dim_track[track_label] ), dim_track[chart_rank] = FocusRank )
+		displayFolder: Song
+		lineageTag: c16be70e-ff89-5a92-9b11-cbe5e48db634
+
+	measure 'Song Days on Chart' =
+			VAR FocusRank = MIN ( dim_track[chart_rank] )
+			RETURN
+			    CALCULATE (
+			        SUM ( mart_track_performance[total_chart_days] ),
+			        dim_track[chart_rank] = FocusRank
+			    )
+		formatString: #,0
+		displayFolder: Song
+		lineageTag: 739aaf23-4e50-50fe-90d4-f0deaf404c74
 
 	column track_key
 		dataType: string

@@ -27,8 +27,8 @@
                 }
               },
               "queryRef": "fact_chart_entry.Explicit Share",
-              "nativeQueryRef": "Explicit entries",
-              "displayName": "Explicit entries"
+              "nativeQueryRef": "Explicit share of chart",
+              "displayName": "Explicit share of chart"
             }
           ]
         }

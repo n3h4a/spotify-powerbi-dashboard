@@ -27,8 +27,8 @@
                 }
               },
               "queryRef": "fact_chart_entry.Avg Popularity",
-              "nativeQueryRef": "Avg popularity",
-              "displayName": "Avg popularity"
+              "nativeQueryRef": "Avg popularity (0-100)",
+              "displayName": "Avg popularity (0-100)"
             }
           ]
         }

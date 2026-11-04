@@ -22,6 +22,8 @@ relationship 8dc9fd72-281b-5105-9137-60421eeb4f9f
 relationship 54fbb5ab-a117-5ae1-a67f-9ab5d56434b0
 	fromColumn: mart_track_performance.track_key
 	toColumn: dim_track.track_key
+	fromCardinality: one
+	crossFilteringBehavior: bothDirections
 
 relationship 929444dc-76b3-5670-81eb-52f4fb45b739
 	fromColumn: mart_daily_chart.date_key

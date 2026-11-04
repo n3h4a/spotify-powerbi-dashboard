@@ -26,20 +26,31 @@ table dim_track
 
 		annotation SummarizationSetBy = User
 
-	column track_label
-		dataType: string
-		lineageTag: 24ac38da-b028-5cd2-98a0-8af814ba9bcd
-		summarizeBy: none
-		sourceColumn: track_label
-
-		annotation SummarizationSetBy = User
-
 	column lead_artist_key
 		dataType: string
 		isHidden
 		lineageTag: c97c106b-5613-57f9-9b3b-b033ae3a1d26
 		summarizeBy: none
 		sourceColumn: lead_artist_key
+
+		annotation SummarizationSetBy = User
+
+	column track_label
+		dataType: string
+		lineageTag: 24ac38da-b028-5cd2-98a0-8af814ba9bcd
+		summarizeBy: none
+		sourceColumn: track_label
+		sortByColumn: chart_rank
+
+		annotation SummarizationSetBy = User
+
+	column chart_rank
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: b68ad1cf-a935-5ae5-9ec5-361c78ce32d6
+		summarizeBy: none
+		sourceColumn: chart_rank
 
 		annotation SummarizationSetBy = User
 

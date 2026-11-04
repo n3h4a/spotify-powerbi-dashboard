@@ -217,3 +217,27 @@ def test_artist_selection_reaches_the_facts():
                 reach.add(n)
                 stack.append(n)
     assert {"fact_chart_entry", "mart_track_performance", "dim_track"} <= reach
+
+
+def test_players_follow_selections_but_never_filter():
+    from spotify_pipeline.powerbi_report import BINDINGS
+
+    assert sum(b.player for b in BINDINGS.values()) == 3  # one per content page
+    for page in (REPORT / "pages").glob("*/page.json"):
+        rules = json.loads(page.read_text(encoding="utf-8")).get("visualInteractions", [])
+        if not rules:
+            continue  # Home has no data visuals
+        players = {r["source"] for r in rules if r["type"] == "NoFilter"}
+        assert len(players) == 1
+        for r in rules:
+            # player -> anything: ignored; anything else -> anything: a real filter
+            assert r["type"] == ("NoFilter" if r["source"] in players else "DataFilter")
+        assert any(r["target"] in players and r["type"] == "DataFilter" for r in rules)
+
+
+def test_songs_are_identified_by_the_unique_ranked_label():
+    """Song titles are not unique, so visuals must use track_label (sorted by chart_rank)."""
+    fields = list(visual_fields())
+    assert not [f for f in fields if f[2] == "dim_track" and f[3] == "track_title"]
+    tmdl = (MODEL / "tables" / "dim_track.tmdl").read_text(encoding="utf-8")
+    assert "sortByColumn: chart_rank" in tmdl

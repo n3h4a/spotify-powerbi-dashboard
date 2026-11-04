@@ -23,10 +23,10 @@
                       "Entity": "mart_track_performance"
                     }
                   },
-                  "Property": "Days on Chart"
+                  "Property": "Song Days on Chart"
                 }
               },
-              "queryRef": "mart_track_performance.Days on Chart",
+              "queryRef": "mart_track_performance.Song Days on Chart",
               "nativeQueryRef": "Days on Chart",
               "displayName": "Days on Chart"
             }

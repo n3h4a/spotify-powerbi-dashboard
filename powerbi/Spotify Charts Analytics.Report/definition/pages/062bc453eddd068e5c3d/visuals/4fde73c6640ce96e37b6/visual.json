@@ -27,8 +27,8 @@
                 }
               },
               "queryRef": "fact_chart_entry.Artists Charting",
-              "nativeQueryRef": "Unique artists",
-              "displayName": "Unique artists"
+              "nativeQueryRef": "Artists",
+              "displayName": "Artists"
             }
           ]
         }

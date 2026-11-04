@@ -57,8 +57,8 @@
                 }
               },
               "queryRef": "fact_chart_entry.Artist Weighted Chart Days",
-              "nativeQueryRef": "Weighted chart days",
-              "displayName": "Weighted chart days"
+              "nativeQueryRef": "Chart days (collabs split)",
+              "displayName": "Chart days (collabs split)"
             },
             {
               "field": {

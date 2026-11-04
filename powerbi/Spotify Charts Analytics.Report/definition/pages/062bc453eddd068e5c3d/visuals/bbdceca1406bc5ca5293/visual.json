@@ -23,12 +23,12 @@
                       "Entity": "fact_chart_entry"
                     }
                   },
-                  "Property": "Chart Entries"
+                  "Property": "Tracks Charting"
                 }
               },
-              "queryRef": "fact_chart_entry.Chart Entries",
-              "nativeQueryRef": "Chart entries",
-              "displayName": "Chart entries"
+              "queryRef": "fact_chart_entry.Tracks Charting",
+              "nativeQueryRef": "Songs",
+              "displayName": "Songs"
             }
           ]
         }

@@ -23,6 +23,21 @@
                       "Entity": "mart_track_performance"
                     }
                   },
+                  "Property": "Song"
+                }
+              },
+              "queryRef": "mart_track_performance.Song",
+              "nativeQueryRef": "Song",
+              "displayName": "Song"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "mart_track_performance"
+                    }
+                  },
                   "Property": "Release Year"
                 }
               },
@@ -53,27 +68,12 @@
                       "Entity": "fact_chart_entry"
                     }
                   },
-                  "Property": "Days at #1"
+                  "Property": "Song Days at #1"
                 }
               },
-              "queryRef": "fact_chart_entry.Days at #1",
+              "queryRef": "fact_chart_entry.Song Days at #1",
               "nativeQueryRef": "Days at #1",
               "displayName": "Days at #1"
-            },
-            {
-              "field": {
-                "Measure": {
-                  "Expression": {
-                    "SourceRef": {
-                      "Entity": "mart_track_performance"
-                    }
-                  },
-                  "Property": "Album Type"
-                }
-              },
-              "queryRef": "mart_track_performance.Album Type",
-              "nativeQueryRef": "Album type",
-              "displayName": "Album type"
             }
           ]
         }
@@ -414,7 +414,7 @@
             }
           },
           "selector": {
-            "metadata": "mart_track_performance.Release Year"
+            "metadata": "mart_track_performance.Song"
           }
         }
       ],

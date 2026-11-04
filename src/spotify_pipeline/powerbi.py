@@ -55,11 +55,18 @@ RELATIONSHIPS = [
     ("mart_artist_performance", "artist_key", "dim_artist", "artist_key"),
 ]
 
-# Relationships that filter in both directions. Only the bridge's link to dim_track:
-# it lets an artist selection flow artist -> bridge -> track -> facts, so clicking an
-# artist filters every visual (the standard many-to-many bridge pattern). Everything
-# else stays single-direction.
-BIDIRECTIONAL = {("bridge_track_artist", "track_key", "dim_track", "track_key")}
+# Relationships that filter in both directions:
+#  * bridge -> dim_track lets an artist selection flow artist -> bridge -> track ->
+#    facts, so clicking an artist filters every visual (the standard bridge pattern)
+#  * the track mart is one row per track (1:1 with dim_track), so selecting one of its
+#    fields (e.g. a chart-life bucket) filters the whole report
+# Everything else stays single-direction; a test checks no filter path is ambiguous.
+BIDIRECTIONAL = {
+    ("bridge_track_artist", "track_key", "dim_track", "track_key"),
+    ("mart_track_performance", "track_key", "dim_track", "track_key"),
+}
+# One-to-one relationships (both sides unique): the track mart extends dim_track.
+ONE_TO_ONE = {("mart_track_performance", "track_key", "dim_track", "track_key")}
 
 
 @dataclass(frozen=True)
@@ -183,13 +190,25 @@ MEASURES = [
     Measure(
         "fact_chart_entry",
         "Artist Share of Chart",
-        "DIVIDE (\n"
-        "    [Artist Weighted Chart Days],\n"
-        "    CALCULATE ( [Chart Entries], REMOVEFILTERS ( dim_artist ) )\n"
-        ")",
+        (
+            "DIVIDE (\n"
+            "    [Artist Weighted Chart Days],\n"
+            "    CALCULATE (\n"
+            "        [Chart Entries],\n"
+            "        REMOVEFILTERS ( dim_artist ),\n"
+            "        REMOVEFILTERS ( bridge_track_artist ),\n"
+            "        REMOVEFILTERS ( dim_track ),\n"
+            "        REMOVEFILTERS ( dim_track_version ),\n"
+            "        REMOVEFILTERS ( mart_track_performance )\n"
+            "    )\n"
+            ")"
+        ),
         "0.0%",
         "Artists",
-        "Artist's weighted share of all chart entries.",
+        (
+            "Artist's weighted chart days as a share of ALL chart entries in the selected period "
+            "(only date filters are kept in the denominator)."
+        ),
     ),
     Measure(
         "fact_chart_entry",
@@ -271,13 +290,19 @@ MEASURES = [
     Measure(
         "fact_chart_entry",
         "Artists Charting",
-        "CALCULATE (\n"
-        "    DISTINCTCOUNT ( bridge_track_artist[artist_key] ),\n"
-        "    CROSSFILTER ( fact_chart_entry[track_key], dim_track[track_key], BOTH )\n"
-        ")",
+        (
+            "CALCULATE (\n"
+            "    DISTINCTCOUNT ( bridge_track_artist[artist_key] ),\n"
+            "    CROSSFILTER ( fact_chart_entry[track_key], dim_track[track_key], BOTH ),\n"
+            '    dim_artist[artist_name] <> "Various Artists"\n'
+            ")"
+        ),
         "#,0",
         "Artists",
-        "Distinct individual artists (collaborations split) on the chart.",
+        (
+            "Distinct individual artists on the chart (collaborations split; the 'Various Artists' "
+            "compilation placeholder is not an artist)."
+        ),
     ),
     Measure(
         "fact_chart_entry",
@@ -372,12 +397,20 @@ MEASURES = [
     Measure(
         "fact_chart_entry",
         "Chart Strength",
-        "VAR Position = MIN ( fact_chart_entry[chart_position] )\n"
-        "RETURN\n"
-        "    IF ( NOT ISBLANK ( Position ), 51 - Position )",
+        (
+            "VAR FocusRank = MIN ( dim_track[chart_rank] )\n"
+            "RETURN\n"
+            "    CALCULATE (\n"
+            "        51 - MIN ( fact_chart_entry[chart_position] ),\n"
+            "        dim_track[chart_rank] = FocusRank\n"
+            "    )"
+        ),
         "0",
-        "Movement",
-        "51 minus chart position: 50 = #1, 1 = #50 (for chart journeys).",
+        "Song",
+        (
+            "Chart journey: 51 minus chart position (50 = #1). For the selected song, or the "
+            "top-ranked song in the current selection."
+        ),
     ),
     Measure(
         "mart_track_performance",
@@ -401,68 +434,155 @@ MEASURES = [
     Measure(
         "mart_track_performance",
         "Top Track",
-        "CALCULATE (\n"
-        "    MAXX (\n"
-        "        TOPN ( 1, VALUES ( dim_track[track_title] ),\n"
-        "            CALCULATE ( SUM ( mart_track_performance[total_chart_days] ) ) ),\n"
-        "        dim_track[track_title]\n"
-        "    ),\n"
-        "    CROSSFILTER ( bridge_track_artist[track_key], dim_track[track_key], BOTH )\n"
-        ")",
+        (
+            "VAR FocusRank = MIN ( dim_track[chart_rank] )\n"
+            "RETURN\n"
+            "    CALCULATE ( MAX ( dim_track[track_label] ), dim_track[chart_rank] = FocusRank )"
+        ),
         "",
         "Track life",
-        "The song with the most days on chart in the current selection.",
+        "The longest-charting song in the current selection.",
     ),
     Measure(
         "mart_track_performance",
         "Peak Position",
-        "MIN ( mart_track_performance[peak_position] )",
+        (
+            "VAR FocusRank = MIN ( dim_track[chart_rank] )\n"
+            "RETURN\n"
+            "    CALCULATE (\n"
+            "        MIN ( mart_track_performance[peak_position] ),\n"
+            "        dim_track[chart_rank] = FocusRank\n"
+            "    )"
+        ),
         "0",
-        "Track life",
-        "Best chart position reached.",
+        "Song",
+        (
+            "Best chart position reached. For the selected song, or the top-ranked song in the "
+            "current selection."
+        ),
     ),
     Measure(
         "mart_track_performance",
         "Debut Position",
-        "MIN ( mart_track_performance[debut_position] )",
+        (
+            "VAR FocusRank = MIN ( dim_track[chart_rank] )\n"
+            "RETURN\n"
+            "    CALCULATE (\n"
+            "        MIN ( mart_track_performance[debut_position] ),\n"
+            "        dim_track[chart_rank] = FocusRank\n"
+            "    )"
+        ),
         "0",
-        "Track life",
-        "Chart position on the debut day.",
+        "Song",
+        (
+            "Chart position on the debut day. For the selected song, or the top-ranked song in the "
+            "current selection."
+        ),
     ),
     Measure(
         "mart_track_performance",
         "Release Year",
-        "YEAR ( MIN ( mart_track_performance[release_date] ) )",
+        (
+            "VAR FocusRank = MIN ( dim_track[chart_rank] )\n"
+            "RETURN\n"
+            "    CALCULATE (\n"
+            "        YEAR ( MIN ( mart_track_performance[release_date] ) ),\n"
+            "        dim_track[chart_rank] = FocusRank\n"
+            "    )"
+        ),
         "0",
-        "Track life",
-        "Release year of the selected song.",
+        "Song",
+        "Release year. For the selected song, or the top-ranked song in the current selection.",
     ),
     Measure(
         "mart_track_performance",
         "Explicit Label",
-        "IF (\n"
-        "    HASONEVALUE ( dim_track[track_key] ),\n"
-        "    IF (\n"
-        "        CALCULATE (\n"
-        "            COUNTROWS ( mart_track_performance ),\n"
-        "            mart_track_performance[debut_is_explicit] = TRUE ()\n"
-        "        ) > 0,\n"
-        '        "Yes",\n'
-        '        "No"\n'
-        "    ),\n"
-        '    "-"\n'
-        ")",
+        (
+            "VAR FocusRank = MIN ( dim_track[chart_rank] )\n"
+            "VAR IsExplicit =\n"
+            "    CALCULATE (\n"
+            "        COUNTROWS ( mart_track_performance ),\n"
+            "        dim_track[chart_rank] = FocusRank,\n"
+            "        mart_track_performance[debut_is_explicit] = TRUE ()\n"
+            "    )\n"
+            "RETURN\n"
+            '    IF ( ISBLANK ( FocusRank ), BLANK (), IF ( IsExplicit > 0, "Yes", "No" ) )'
+        ),
         "",
-        "Track life",
-        "Whether the selected song is explicit.",
+        "Song",
+        (
+            "Whether the song is explicit. For the selected song, or the top-ranked song in the "
+            "current selection."
+        ),
     ),
     Measure(
         "mart_track_performance",
         "Album Type",
-        'SELECTEDVALUE ( mart_track_performance[debut_album_type], "-" )',
+        (
+            "VAR FocusRank = MIN ( dim_track[chart_rank] )\n"
+            "RETURN\n"
+            "    CALCULATE (\n"
+            "        SELECTEDVALUE ( mart_track_performance[debut_album_type] ),\n"
+            "        dim_track[chart_rank] = FocusRank\n"
+            "    )"
+        ),
         "",
-        "Track life",
-        "Release type of the selected song when it debuted.",
+        "Song",
+        (
+            "Release type when the song debuted. For the selected song, or the top-ranked song in "
+            "the current selection."
+        ),
+    ),
+    Measure(
+        "mart_track_performance",
+        "Song",
+        (
+            "VAR FocusRank = MIN ( dim_track[chart_rank] )\n"
+            "RETURN\n"
+            "    CALCULATE ( MAX ( dim_track[track_label] ), dim_track[chart_rank] = FocusRank )"
+        ),
+        "",
+        "Song",
+        (
+            "Name of the song the Songs page describes. For the selected song, or the top-ranked "
+            "song in the current selection."
+        ),
+    ),
+    Measure(
+        "mart_track_performance",
+        "Song Days on Chart",
+        (
+            "VAR FocusRank = MIN ( dim_track[chart_rank] )\n"
+            "RETURN\n"
+            "    CALCULATE (\n"
+            "        SUM ( mart_track_performance[total_chart_days] ),\n"
+            "        dim_track[chart_rank] = FocusRank\n"
+            "    )"
+        ),
+        "#,0",
+        "Song",
+        (
+            "Total days on chart. For the selected song, or the top-ranked song in the current "
+            "selection."
+        ),
+    ),
+    Measure(
+        "fact_chart_entry",
+        "Song Days at #1",
+        (
+            "VAR FocusRank = MIN ( dim_track[chart_rank] )\n"
+            "RETURN\n"
+            "    COALESCE (\n"
+            "        CALCULATE ( [Days at #1], dim_track[chart_rank] = FocusRank ),\n"
+            "        IF ( NOT ISBLANK ( FocusRank ), 0 )\n"
+            "    )"
+        ),
+        "#,0",
+        "Song",
+        (
+            "Days at position 1. For the selected song, or the top-ranked song in the current "
+            "selection."
+        ),
     ),
 ]
 
@@ -545,7 +665,7 @@ def _table_tmdl(con: duckdb.DuckDBPyConnection, table: str, source: str) -> str:
         data_type, fmt = _column_format(col, duck_type)
         lines.append(f"\tcolumn {_quote(col)}")
         lines.append(f"\t\tdataType: {data_type}")
-        if col.endswith("_key") or col.endswith("_order"):
+        if col.endswith("_key") or col.endswith("_order") or col == "chart_rank":
             lines.append("\t\tisHidden")
         if table == "dim_date" and col == "calendar_date":
             lines.append("\t\tisKey")
@@ -558,6 +678,8 @@ def _table_tmdl(con: duckdb.DuckDBPyConnection, table: str, source: str) -> str:
             lines.append("\t\tsortByColumn: month")
         if table == "dim_date" and col == "day_name":
             lines.append("\t\tsortByColumn: day_of_week")
+        if table == "dim_track" and col == "track_label":
+            lines.append("\t\tsortByColumn: chart_rank")
         if col == "chart_life_bucket":
             lines.append("\t\tsortByColumn: chart_life_bucket_order")
         if col == "album_cover_url":
@@ -643,6 +765,8 @@ def _semantic_model(con: duckdb.DuckDBPyConnection, root: Path) -> None:
             f"\tfromColumn: {frm}.{fcol}",
             f"\ttoColumn: {to}.{tcol}",
         ]
+        if (frm, fcol, to, tcol) in ONE_TO_ONE:
+            rel.append("\tfromCardinality: one")
         if (frm, fcol, to, tcol) in BIDIRECTIONAL:
             rel.append("\tcrossFilteringBehavior: bothDirections")
         rel.append("")

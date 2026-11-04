@@ -46,8 +46,8 @@
                 }
               },
               "queryRef": "fact_chart_entry.Artist Tracks",
-              "nativeQueryRef": "Tracks",
-              "displayName": "Tracks"
+              "nativeQueryRef": "Songs",
+              "displayName": "Songs"
             }
           ]
         }

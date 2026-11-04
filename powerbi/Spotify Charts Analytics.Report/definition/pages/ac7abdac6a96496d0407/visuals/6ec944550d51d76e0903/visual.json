@@ -27,8 +27,8 @@
                 }
               },
               "queryRef": "mart_track_performance.Debut Position",
-              "nativeQueryRef": "Debut Position",
-              "displayName": "Debut Position"
+              "nativeQueryRef": "First Position (in data)",
+              "displayName": "First Position (in data)"
             }
           ]
         }

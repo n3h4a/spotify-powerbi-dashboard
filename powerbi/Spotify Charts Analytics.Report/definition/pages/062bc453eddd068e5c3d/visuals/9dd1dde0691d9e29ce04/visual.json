@@ -46,7 +46,8 @@
                 }
               },
               "queryRef": "fact_chart_entry.Chart Entries",
-              "nativeQueryRef": "Chart Entries"
+              "nativeQueryRef": "Chart entries",
+              "displayName": "Chart entries"
             }
           ]
         }
@@ -469,7 +470,7 @@
             "text": {
               "expr": {
                 "Literal": {
-                  "Value": "'Album Type Distribution'"
+                  "Value": "'Album Type (chart entries)'"
                 }
               }
             },

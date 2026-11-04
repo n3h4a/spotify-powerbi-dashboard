@@ -23,10 +23,10 @@
                       "Entity": "dim_track"
                     }
                   },
-                  "Property": "track_title"
+                  "Property": "track_label"
                 }
               },
-              "queryRef": "dim_track.track_title",
+              "queryRef": "dim_track.track_label",
               "nativeQueryRef": "Song",
               "displayName": "Song"
             }

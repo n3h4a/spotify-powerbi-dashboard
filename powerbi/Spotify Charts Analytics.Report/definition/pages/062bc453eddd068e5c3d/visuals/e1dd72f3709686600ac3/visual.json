@@ -46,8 +46,8 @@
                 }
               },
               "queryRef": "mart_track_performance.Tracks",
-              "nativeQueryRef": "Tracks",
-              "displayName": "Tracks"
+              "nativeQueryRef": "Songs",
+              "displayName": "Songs"
             }
           ]
         }
@@ -285,7 +285,7 @@
             "text": {
               "expr": {
                 "Literal": {
-                  "Value": "'How Long Tracks Last'"
+                  "Value": "'How Long Songs Last on the Chart'"
                 }
               }
             },

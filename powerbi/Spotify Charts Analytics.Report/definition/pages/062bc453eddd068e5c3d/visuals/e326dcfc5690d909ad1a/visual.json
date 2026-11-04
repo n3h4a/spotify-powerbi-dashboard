@@ -39,15 +39,15 @@
                 "Measure": {
                   "Expression": {
                     "SourceRef": {
-                      "Entity": "mart_daily_chart"
+                      "Entity": "fact_chart_entry"
                     }
                   },
-                  "Property": "Avg Artist HHI"
+                  "Property": "Avg Popularity"
                 }
               },
-              "queryRef": "mart_daily_chart.Avg Artist HHI",
-              "nativeQueryRef": "Artist concentration",
-              "displayName": "Artist concentration"
+              "queryRef": "fact_chart_entry.Avg Popularity",
+              "nativeQueryRef": "Avg popularity",
+              "displayName": "Avg popularity"
             }
           ]
         }
@@ -382,7 +382,7 @@
             "text": {
               "expr": {
                 "Literal": {
-                  "Value": "'Artist Dominance by Month'"
+                  "Value": "'Average Popularity by Month'"
                 }
               }
             }

@@ -67,11 +67,18 @@ CALCULATE (
     CROSSFILTER ( bridge_track_artist[track_key], dim_track[track_key], BOTH )
 )
 
-// Artist's weighted share of all chart entries.  [table: fact_chart_entry]
+// Artist's weighted chart days as a share of ALL chart entries in the selected period (only date filters are kept in the denominator).  [table: fact_chart_entry]
 Artist Share of Chart =
 DIVIDE (
     [Artist Weighted Chart Days],
-    CALCULATE ( [Chart Entries], REMOVEFILTERS ( dim_artist ) )
+    CALCULATE (
+        [Chart Entries],
+        REMOVEFILTERS ( dim_artist ),
+        REMOVEFILTERS ( bridge_track_artist ),
+        REMOVEFILTERS ( dim_track ),
+        REMOVEFILTERS ( dim_track_version ),
+        REMOVEFILTERS ( mart_track_performance )
+    )
 )
 
 // ---------------------------------------------------------------- Point in time
@@ -120,11 +127,12 @@ Collaboration Share =
 AVERAGE ( mart_daily_chart[collaboration_share] )
 
 // ---------------------------------------------------------------- Artists
-// Distinct individual artists (collaborations split) on the chart.  [table: fact_chart_entry]
+// Distinct individual artists on the chart (collaborations split; the 'Various Artists' compilation placeholder is not an artist).  [table: fact_chart_entry]
 Artists Charting =
 CALCULATE (
     DISTINCTCOUNT ( bridge_track_artist[artist_key] ),
-    CROSSFILTER ( fact_chart_entry[track_key], dim_track[track_key], BOTH )
+    CROSSFILTER ( fact_chart_entry[track_key], dim_track[track_key], BOTH ),
+    dim_artist[artist_name] <> "Various Artists"
 )
 
 // ---------------------------------------------------------------- Chart
@@ -187,12 +195,15 @@ RETURN
             & " songs, with " & FORMAT ( [Artist Days at #1], "0" ) & " days at #1."
     )
 
-// ---------------------------------------------------------------- Movement
-// 51 minus chart position: 50 = #1, 1 = #50 (for chart journeys).  [table: fact_chart_entry]
+// ---------------------------------------------------------------- Song
+// Chart journey: 51 minus chart position (50 = #1). For the selected song, or the top-ranked song in the current selection.  [table: fact_chart_entry]
 Chart Strength =
-VAR Position = MIN ( fact_chart_entry[chart_position] )
+VAR FocusRank = MIN ( dim_track[chart_rank] )
 RETURN
-    IF ( NOT ISBLANK ( Position ), 51 - Position )
+    CALCULATE (
+        51 - MIN ( fact_chart_entry[chart_position] ),
+        dim_track[chart_rank] = FocusRank
+    )
 
 // ---------------------------------------------------------------- Track life
 // Total days on chart (respects artist selection).  [table: mart_track_performance]
@@ -206,44 +217,81 @@ CALCULATE (
 Tracks =
 COUNTROWS ( mart_track_performance )
 
-// The song with the most days on chart in the current selection.  [table: mart_track_performance]
+// The longest-charting song in the current selection.  [table: mart_track_performance]
 Top Track =
-CALCULATE (
-    MAXX (
-        TOPN ( 1, VALUES ( dim_track[track_title] ),
-            CALCULATE ( SUM ( mart_track_performance[total_chart_days] ) ) ),
-        dim_track[track_title]
-    ),
-    CROSSFILTER ( bridge_track_artist[track_key], dim_track[track_key], BOTH )
-)
+VAR FocusRank = MIN ( dim_track[chart_rank] )
+RETURN
+    CALCULATE ( MAX ( dim_track[track_label] ), dim_track[chart_rank] = FocusRank )
 
-// Best chart position reached.  [table: mart_track_performance]
+// ---------------------------------------------------------------- Song
+// Best chart position reached. For the selected song, or the top-ranked song in the current selection.  [table: mart_track_performance]
 Peak Position =
-MIN ( mart_track_performance[peak_position] )
+VAR FocusRank = MIN ( dim_track[chart_rank] )
+RETURN
+    CALCULATE (
+        MIN ( mart_track_performance[peak_position] ),
+        dim_track[chart_rank] = FocusRank
+    )
 
-// Chart position on the debut day.  [table: mart_track_performance]
+// Chart position on the debut day. For the selected song, or the top-ranked song in the current selection.  [table: mart_track_performance]
 Debut Position =
-MIN ( mart_track_performance[debut_position] )
+VAR FocusRank = MIN ( dim_track[chart_rank] )
+RETURN
+    CALCULATE (
+        MIN ( mart_track_performance[debut_position] ),
+        dim_track[chart_rank] = FocusRank
+    )
 
-// Release year of the selected song.  [table: mart_track_performance]
+// Release year. For the selected song, or the top-ranked song in the current selection.  [table: mart_track_performance]
 Release Year =
-YEAR ( MIN ( mart_track_performance[release_date] ) )
+VAR FocusRank = MIN ( dim_track[chart_rank] )
+RETURN
+    CALCULATE (
+        YEAR ( MIN ( mart_track_performance[release_date] ) ),
+        dim_track[chart_rank] = FocusRank
+    )
 
-// Whether the selected song is explicit.  [table: mart_track_performance]
+// Whether the song is explicit. For the selected song, or the top-ranked song in the current selection.  [table: mart_track_performance]
 Explicit Label =
-IF (
-    HASONEVALUE ( dim_track[track_key] ),
-    IF (
-        CALCULATE (
-            COUNTROWS ( mart_track_performance ),
-            mart_track_performance[debut_is_explicit] = TRUE ()
-        ) > 0,
-        "Yes",
-        "No"
-    ),
-    "-"
-)
+VAR FocusRank = MIN ( dim_track[chart_rank] )
+VAR IsExplicit =
+    CALCULATE (
+        COUNTROWS ( mart_track_performance ),
+        dim_track[chart_rank] = FocusRank,
+        mart_track_performance[debut_is_explicit] = TRUE ()
+    )
+RETURN
+    IF ( ISBLANK ( FocusRank ), BLANK (), IF ( IsExplicit > 0, "Yes", "No" ) )
 
-// Release type of the selected song when it debuted.  [table: mart_track_performance]
+// Release type when the song debuted. For the selected song, or the top-ranked song in the current selection.  [table: mart_track_performance]
 Album Type =
-SELECTEDVALUE ( mart_track_performance[debut_album_type], "-" )
+VAR FocusRank = MIN ( dim_track[chart_rank] )
+RETURN
+    CALCULATE (
+        SELECTEDVALUE ( mart_track_performance[debut_album_type] ),
+        dim_track[chart_rank] = FocusRank
+    )
+
+// Name of the song the Songs page describes. For the selected song, or the top-ranked song in the current selection.  [table: mart_track_performance]
+Song =
+VAR FocusRank = MIN ( dim_track[chart_rank] )
+RETURN
+    CALCULATE ( MAX ( dim_track[track_label] ), dim_track[chart_rank] = FocusRank )
+
+// Total days on chart. For the selected song, or the top-ranked song in the current selection.  [table: mart_track_performance]
+Song Days on Chart =
+VAR FocusRank = MIN ( dim_track[chart_rank] )
+RETURN
+    CALCULATE (
+        SUM ( mart_track_performance[total_chart_days] ),
+        dim_track[chart_rank] = FocusRank
+    )
+
+// Days at position 1. For the selected song, or the top-ranked song in the current selection.  [table: fact_chart_entry]
+Song Days at #1 =
+VAR FocusRank = MIN ( dim_track[chart_rank] )
+RETURN
+    COALESCE (
+        CALCULATE ( [Days at #1], dim_track[chart_rank] = FocusRank ),
+        IF ( NOT ISBLANK ( FocusRank ), 0 )
+    )

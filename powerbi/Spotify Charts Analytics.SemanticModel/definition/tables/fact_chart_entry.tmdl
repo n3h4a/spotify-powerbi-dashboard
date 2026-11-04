@@ -81,7 +81,14 @@ table fact_chart_entry
 	measure 'Artist Share of Chart' =
 			DIVIDE (
 			    [Artist Weighted Chart Days],
-			    CALCULATE ( [Chart Entries], REMOVEFILTERS ( dim_artist ) )
+			    CALCULATE (
+			        [Chart Entries],
+			        REMOVEFILTERS ( dim_artist ),
+			        REMOVEFILTERS ( bridge_track_artist ),
+			        REMOVEFILTERS ( dim_track ),
+			        REMOVEFILTERS ( dim_track_version ),
+			        REMOVEFILTERS ( mart_track_performance )
+			    )
 			)
 		formatString: 0.0%
 		displayFolder: Artists
@@ -100,7 +107,8 @@ table fact_chart_entry
 	measure 'Artists Charting' =
 			CALCULATE (
 			    DISTINCTCOUNT ( bridge_track_artist[artist_key] ),
-			    CROSSFILTER ( fact_chart_entry[track_key], dim_track[track_key], BOTH )
+			    CROSSFILTER ( fact_chart_entry[track_key], dim_track[track_key], BOTH ),
+			    dim_artist[artist_name] <> "Various Artists"
 			)
 		formatString: #,0
 		displayFolder: Artists
@@ -178,12 +186,26 @@ table fact_chart_entry
 		lineageTag: 760cf1fe-663c-55af-8525-eaddc855fa2e
 
 	measure 'Chart Strength' =
-			VAR Position = MIN ( fact_chart_entry[chart_position] )
+			VAR FocusRank = MIN ( dim_track[chart_rank] )
 			RETURN
-			    IF ( NOT ISBLANK ( Position ), 51 - Position )
+			    CALCULATE (
+			        51 - MIN ( fact_chart_entry[chart_position] ),
+			        dim_track[chart_rank] = FocusRank
+			    )
 		formatString: 0
-		displayFolder: Movement
+		displayFolder: Song
 		lineageTag: 545c1638-1d3f-5d87-b863-35c44449e94b
+
+	measure 'Song Days at #1' =
+			VAR FocusRank = MIN ( dim_track[chart_rank] )
+			RETURN
+			    COALESCE (
+			        CALCULATE ( [Days at #1], dim_track[chart_rank] = FocusRank ),
+			        IF ( NOT ISBLANK ( FocusRank ), 0 )
+			    )
+		formatString: #,0
+		displayFolder: Song
+		lineageTag: 54bd9ce7-e5e9-5ac6-9f56-a8351f070502
 
 	column date_key
 		dataType: int64

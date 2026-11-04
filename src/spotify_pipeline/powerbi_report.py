@@ -25,8 +25,10 @@ SCHEMA = "https://developer.microsoft.com/json-schemas/fabric"
 VERSIONS = {"report": "3.3.0", "page": "2.1.0", "visual": "2.11.0"}
 
 # Old (CSV) fields referenced inside the original formatting -> new model fields.
+# Songs are identified by dim_track.track_label: unique (unlike titles) and sorted by
+# chart_rank, so every song list and the album-cover player start with the biggest hit.
 FIELD_MAP = {
-    ("Top-50-World", "song"): ("dim_track", "track_title"),
+    ("Top-50-World", "song"): ("dim_track", "track_label"),
     ("Top-50-World", "artist"): ("dim_track", "lead_artist_name"),
     ("Top-50-World", "album_cover_url"): ("mart_track_performance", "album_cover_url"),
     ("Top-50-World", "is_explicit"): ("dim_track_version", "is_explicit"),
@@ -60,6 +62,9 @@ class Binding:
     title: str | None = None
     sort_desc: F | None = None
     drop: bool = False
+    # A "player" shows the current song; it follows the page's selections but its own
+    # clicks never filter other visuals.
+    player: bool = False
 
 
 @dataclass
@@ -72,26 +77,34 @@ class _Visual:
     old_roles: dict[str, list[str]] = field(default_factory=dict)
 
 
-SLICER_SONGS = {"Values": [col("dim_track", "track_title", "Song")]}
+SONG = col("dim_track", "track_label", "Song")
+SONG_LIST = {"Values": [SONG]}
 PROGRESS = {"Y": [meas("Avg Popularity"), meas("Popularity Remainder")]}
 
+
+def player() -> Binding:
+    return Binding(SONG_LIST, player=True)
+
+
 # (page, visual type, x, y) of the original visual -> what it shows now.
+#
+# Every number has one meaning:
+#   Overview  the whole chart, filtered by whatever you click
+#   Artists   all artists until you click one, then that artist
+#   Songs     always ONE song: the one you click, or the biggest hit in the selection
+#             (the player shows that same song)
 BINDINGS: dict[tuple[str, str, int, int], Binding] = {
     # ------------------------------------------------------------------ Overview
-    ("Overview", "advancedSlicerVisual", 37, 115): Binding(SLICER_SONGS, "Browse Songs"),
-    ("Overview", "advancedSlicerVisual", 541, 110): Binding(SLICER_SONGS),
+    ("Overview", "advancedSlicerVisual", 37, 115): Binding(SONG_LIST, "Browse Songs"),
+    ("Overview", "advancedSlicerVisual", 541, 110): player(),
     ("Overview", "advancedSlicerVisual", 1081, 341): Binding({}, drop=True),  # month/qtr toggle
-    ("Overview", "cardVisual", 408, 114): Binding(
-        {"Data": [meas("Chart Entries", "Chart entries")]}
-    ),
+    ("Overview", "cardVisual", 408, 114): Binding({"Data": [meas("Tracks Charting", "Songs")]}),
     ("Overview", "cardVisual", 408, 184): Binding(
-        {"Data": [meas("Avg Popularity", "Avg popularity")]}
+        {"Data": [meas("Avg Popularity", "Avg popularity (0-100)")]}
     ),
-    ("Overview", "cardVisual", 408, 254): Binding(
-        {"Data": [meas("Artists Charting", "Unique artists")]}
-    ),
+    ("Overview", "cardVisual", 408, 254): Binding({"Data": [meas("Artists Charting", "Artists")]}),
     ("Overview", "cardVisual", 401, 331): Binding(
-        {"Data": [meas("Explicit Share", "Explicit entries")]}
+        {"Data": [meas("Explicit Share", "Explicit share of chart")]}
     ),
     ("Overview", "gauge", 816, 118): Binding(
         {"Y": [meas("Avg Popularity")], "MaxValue": [meas("Popularity Max")]},
@@ -100,14 +113,14 @@ BINDINGS: dict[tuple[str, str, int, int], Binding] = {
     ("Overview", "donutChart", 1047, 115): Binding(
         {
             "Category": [col("dim_track_version", "is_explicit", "Explicit")],
-            "Y": [meas("Chart Entries")],
+            "Y": [meas("Chart Entries", "Chart entries")],
         },
-        "Explicit Content",
+        "Explicit Content (chart entries)",
     ),
     ("Overview", "lineClusteredColumnComboChart", 812, 225): Binding(
         {
             "Category": [col("dim_artist", "artist_name", "Artist")],
-            "Y": [meas("Top 5 Artist Days", "Weighted chart days")],
+            "Y": [meas("Top 5 Artist Days", "Chart days (collabs split)")],
         },
         "Top 5 Artists",
         sort_desc=meas("Top 5 Artist Days"),
@@ -115,31 +128,28 @@ BINDINGS: dict[tuple[str, str, int, int], Binding] = {
     ("Overview", "barChart", 1044, 227): Binding(
         {
             "Category": [col("dim_track_version", "album_type", "Album type")],
-            "Y": [meas("Chart Entries")],
+            "Y": [meas("Chart Entries", "Chart entries")],
         },
-        "Album Type Distribution",
+        "Album Type (chart entries)",
     ),
     ("Overview", "hundredPercentStackedBarChart", 563, 289): Binding(PROGRESS),
     ("Overview", "areaChart", 808, 342): Binding(
         {
             "Category": [col("dim_date", "year_month", "Month")],
-            "Y": [meas("Avg Artist HHI", "Artist concentration")],
+            "Y": [meas("Avg Popularity", "Avg popularity")],
         },
-        "Artist Dominance by Month",
+        "Average Popularity by Month",
     ),
     ("Overview", "clusteredBarChart", 307, 420): Binding(
         {
             "Category": [col("dim_artist", "artist_name", "Artist")],
-            "Y": [meas("Artist Tracks", "Tracks")],
+            "Y": [meas("Artist Tracks", "Songs")],
         },
         "Songs by Artist",
         sort_desc=meas("Artist Tracks"),
     ),
     ("Overview", "clusteredBarChart", 563, 420): Binding(
-        {
-            "Category": [col("dim_track", "track_label", "Song")],
-            "Y": [meas("Days on Chart", "Days on chart")],
-        },
+        {"Category": [SONG], "Y": [meas("Days on Chart", "Days on chart")]},
         "Longest Chart Runs",
         sort_desc=meas("Days on Chart"),
     ),
@@ -156,45 +166,44 @@ BINDINGS: dict[tuple[str, str, int, int], Binding] = {
         "Browse Artists",
         sort_desc=meas("Artist Share of Chart"),
     ),
-    ("Artist", "cardVisual", 300, 122): Binding({"Data": [meas("Artist Tracks", "Unique Songs")]}),
+    ("Artist", "cardVisual", 300, 122): Binding({"Data": [meas("Artist Tracks", "Songs")]}),
     ("Artist", "cardVisual", 540, 123): Binding(
         {"Data": [meas("Artist Avg Popularity", "Avg Popularity")]}
     ),
     ("Artist", "cardVisual", 777, 123): Binding(
         {"Data": [meas("Artist Days at #1", "Days at #1")]}
     ),
-    ("Artist", "advancedSlicerVisual", 1006, 117): Binding(SLICER_SONGS),
+    ("Artist", "advancedSlicerVisual", 1006, 117): player(),
     ("Artist", "hundredPercentStackedBarChart", 1030, 290): Binding(PROGRESS),
     ("Artist", "cardVisual", 311, 422): Binding(
         {
             "Data": [
                 meas("Top Track", "Longest-charting song"),
                 meas("Artist Share of Chart", "Share of the chart"),
-                meas("Artist Weighted Chart Days", "Weighted chart days"),
+                meas("Artist Weighted Chart Days", "Chart days (collabs split)"),
                 meas("Artist Best Position", "Best position"),
             ]
         }
     ),
     ("Artist", "clusteredBarChart", 618, 426): Binding(
-        {
-            "Category": [col("mart_track_performance", "track_title", "Song")],
-            "Y": [meas("Days on Chart", "Days on chart")],
-        },
+        {"Category": [SONG], "Y": [meas("Days on Chart", "Days on chart")]},
         "Songs by Days on Chart",
         sort_desc=meas("Days on Chart"),
     ),
     ("Artist", "cardVisual", 409, 610): Binding({"Data": [meas("Artist Insight", " ")]}),
     # ------------------------------------------------------------------ Songs
-    ("Songs", "cardVisual", 294, 112): Binding({"Data": [meas("Days on Chart", "Days on Chart")]}),
+    ("Songs", "cardVisual", 294, 112): Binding(
+        {"Data": [meas("Song Days on Chart", "Days on Chart")]}
+    ),
     ("Songs", "cardVisual", 537, 112): Binding({"Data": [meas("Peak Position", "Peak Position")]}),
     ("Songs", "cardVisual", 778, 113): Binding(
-        {"Data": [meas("Debut Position", "Debut Position")]}
+        {"Data": [meas("Debut Position", "First Position (in data)")]}
     ),
-    ("Songs", "advancedSlicerVisual", 1013, 112): Binding(SLICER_SONGS),
+    ("Songs", "advancedSlicerVisual", 1013, 112): player(),
     ("Songs", "tableEx", 36, 119): Binding(
         {
             "Values": [
-                col("dim_track", "track_title", "Song"),
+                SONG,
                 col("dim_track", "lead_artist_name", "Artist"),
                 meas("Days on Chart", "Days"),
             ]
@@ -205,10 +214,10 @@ BINDINGS: dict[tuple[str, str, int, int], Binding] = {
     ("Songs", "cardVisual", 281, 417): Binding(
         {
             "Data": [
+                meas("Song", "Song"),
                 meas("Release Year", "Release Year"),
                 meas("Explicit Label", "Explicit"),
-                meas("Days at #1", "Days at #1"),
-                meas("Album Type", "Album type"),
+                meas("Song Days at #1", "Days at #1"),
             ]
         }
     ),
@@ -231,9 +240,9 @@ REPLACEMENTS = [
         Binding(
             {
                 "Category": [col("mart_track_performance", "chart_life_bucket", "Chart life")],
-                "Y": [meas("Tracks", "Tracks")],
+                "Y": [meas("Tracks", "Songs")],
             },
-            "How Long Tracks Last",
+            "How Long Songs Last on the Chart",
         ),
     ),
 ]
@@ -523,7 +532,8 @@ def build_report(
         page_objects = _remap_entities(section_cfg.get("objects", {}), model_tables)
         if page_objects:
             page_json["objects"] = page_objects
-        _write_json(d / "pages" / section["name"] / "page.json", page_json)
+        data_visuals: list[str] = []  # names of visuals that show data
+        players: set[str] = set()
 
         visuals: dict[tuple, _Visual] = {}
         for container in section["visualContainers"]:
@@ -554,6 +564,10 @@ def build_report(
             _write_json(
                 d / "pages" / section["name"] / "visuals" / out["name"] / "visual.json", out
             )
+            if binding is not None and binding.roles:
+                data_visuals.append(out["name"])
+                if binding.player:
+                    players.add(out["name"])
 
         for slot, donor, new_type, binding in REPLACEMENTS:
             if slot[0] != page:
@@ -572,6 +586,12 @@ def build_report(
             _write_json(
                 d / "pages" / section["name"] / "visuals" / out["name"] / "visual.json", out
             )
+            data_visuals.append(out["name"])
+
+        interactions = _interactions(data_visuals, players)
+        if interactions:
+            page_json["visualInteractions"] = interactions
+        _write_json(d / "pages" / section["name"] / "page.json", page_json)
 
     _write_json(
         d / "pages" / "pages.json",
@@ -581,6 +601,22 @@ def build_report(
             "activePageName": page_order[0],
         },
     )
+
+
+def _interactions(data_visuals: list[str], players: set[str]) -> list[dict]:
+    """Explicit interaction rules, so every click behaves the same predictable way.
+
+    * Selections FILTER other visuals (no cross-highlighting, where bars only dim and
+      numbers become hard to read).
+    * A player follows the selection but never filters anything itself.
+    """
+    rules = []
+    for source in data_visuals:
+        for target in data_visuals:
+            if source != target:
+                kind = "NoFilter" if source in players else "DataFilter"
+                rules.append({"source": source, "target": target, "type": kind})
+    return rules
 
 
 def _matches(key: tuple, spec: tuple) -> bool:

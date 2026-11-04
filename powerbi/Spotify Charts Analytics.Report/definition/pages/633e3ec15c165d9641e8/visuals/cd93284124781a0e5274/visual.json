@@ -20,13 +20,13 @@
                 "Column": {
                   "Expression": {
                     "SourceRef": {
-                      "Entity": "mart_track_performance"
+                      "Entity": "dim_track"
                     }
                   },
-                  "Property": "track_title"
+                  "Property": "track_label"
                 }
               },
-              "queryRef": "mart_track_performance.track_title",
+              "queryRef": "dim_track.track_label",
               "nativeQueryRef": "Song",
               "displayName": "Song"
             }
