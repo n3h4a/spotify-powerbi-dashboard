@@ -217,7 +217,7 @@ committed report is out of date.
 model is in TMDL and the report in PBIR JSON. It is generated from the warehouse by
 `make powerbi`, version-controlled, and reviewed as text diffs. It contains:
 
-- a **9-table star-schema model** with single-direction relationships, a marked date table
+- a **9-table star-schema model** (a bidirectional bridge for collaborations, everything else single-direction), a marked date table
   and **38 documented DAX measures** (including fair collaboration credit through the bridge
   table, and point-in-time SCD2 measures)
 - **the original Spotify-style design, kept intact:** the generator reads the hand-designed

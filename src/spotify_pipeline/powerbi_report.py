@@ -137,7 +137,7 @@ BINDINGS: dict[tuple[str, str, int, int], Binding] = {
     ),
     ("Overview", "clusteredBarChart", 563, 420): Binding(
         {
-            "Category": [col("dim_track", "track_title", "Song")],
+            "Category": [col("dim_track", "track_label", "Song")],
             "Y": [meas("Days on Chart", "Days on chart")],
         },
         "Longest Chart Runs",

@@ -43,7 +43,7 @@ MODEL_TABLES = {
     "mart_artist_performance": "marts.mart_artist_performance",
 }
 
-# (from = many side, to = one side). All single-direction filters.
+# (from = many side, to = one side).
 RELATIONSHIPS = [
     ("fact_chart_entry", "date_key", "dim_date", "date_key"),
     ("fact_chart_entry", "track_key", "dim_track", "track_key"),
@@ -54,6 +54,12 @@ RELATIONSHIPS = [
     ("mart_daily_chart", "date_key", "dim_date", "date_key"),
     ("mart_artist_performance", "artist_key", "dim_artist", "artist_key"),
 ]
+
+# Relationships that filter in both directions. Only the bridge's link to dim_track:
+# it lets an artist selection flow artist -> bridge -> track -> facts, so clicking an
+# artist filters every visual (the standard many-to-many bridge pattern). Everything
+# else stays single-direction.
+BIDIRECTIONAL = {("bridge_track_artist", "track_key", "dim_track", "track_key")}
 
 
 @dataclass(frozen=True)
@@ -636,8 +642,10 @@ def _semantic_model(con: duckdb.DuckDBPyConnection, root: Path) -> None:
             f"relationship {_id('rel', frm, fcol, to, tcol)}",
             f"\tfromColumn: {frm}.{fcol}",
             f"\ttoColumn: {to}.{tcol}",
-            "",
         ]
+        if (frm, fcol, to, tcol) in BIDIRECTIONAL:
+            rel.append("\tcrossFilteringBehavior: bothDirections")
+        rel.append("")
     _write(d / "relationships.tmdl", "\n".join(rel))
     for table, source in MODEL_TABLES.items():
         _write(d / "tables" / f"{table}.tmdl", _table_tmdl(con, table, source))

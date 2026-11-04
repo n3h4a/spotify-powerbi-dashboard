@@ -26,6 +26,14 @@ table dim_track
 
 		annotation SummarizationSetBy = User
 
+	column track_label
+		dataType: string
+		lineageTag: 24ac38da-b028-5cd2-98a0-8af814ba9bcd
+		summarizeBy: none
+		sourceColumn: track_label
+
+		annotation SummarizationSetBy = User
+
 	column lead_artist_key
 		dataType: string
 		isHidden

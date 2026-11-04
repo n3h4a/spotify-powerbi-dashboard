@@ -53,9 +53,12 @@ the date table), `dim_track`, `dim_track_version` (SCD2) and `dim_artist` around
 
 Design choices:
 
-- **All relationships are single-direction.** The artist measures filter through the
-  bridge with `TREATAS` and `CROSSFILTER` only where needed, which avoids the ambiguity
-  and performance cost of bidirectional relationships.
+- **One bidirectional relationship, on purpose:** the bridge's link to `dim_track`. It
+  lets an artist selection flow artist → bridge → track → chart facts, so clicking an
+  artist filters every visual, just like the original flat-table dashboard. This is the
+  standard many-to-many bridge pattern. All other relationships are single-direction,
+  and a test checks that no table can be reached by two filter paths (which Power BI
+  would reject as ambiguous).
 - **`dim_track_version` is deliberately not related to `dim_track`.** The fact table
   links to both, and a second path would make filtering ambiguous.
 - **Implicit measures are discouraged.** Numeric columns don't auto-sum. Every number in

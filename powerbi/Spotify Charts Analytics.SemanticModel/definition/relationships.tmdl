@@ -13,6 +13,7 @@ relationship 787bc294-c131-5af2-bb36-3bb7ebdd5425
 relationship dc82e45a-da93-5bc6-9edb-362172156eec
 	fromColumn: bridge_track_artist.track_key
 	toColumn: dim_track.track_key
+	crossFilteringBehavior: bothDirections
 
 relationship 8dc9fd72-281b-5105-9137-60421eeb4f9f
 	fromColumn: bridge_track_artist.artist_key

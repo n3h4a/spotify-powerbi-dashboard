@@ -180,3 +180,40 @@ def test_base_theme_is_packaged():
     assert (
         REPORT.parent / "StaticResources" / "SharedResources" / "BaseThemes" / f"{name}.json"
     ).exists()
+
+
+def test_model_has_no_ambiguous_filter_paths():
+    """Power BI rejects models where a filter can reach a table by two routes."""
+    edges = {}
+    for rel in powerbi.RELATIONSHIPS:
+        frm, _, to, _ = rel
+        edges.setdefault(to, set()).add(frm)  # the one side filters the many side
+        if rel in powerbi.BIDIRECTIONAL:
+            edges.setdefault(frm, set()).add(to)
+
+    def count_paths(node, target, seen):
+        if node == target:
+            return 1
+        return sum(count_paths(n, target, seen | {n}) for n in edges.get(node, ()) if n not in seen)
+
+    tables = set(powerbi.MODEL_TABLES)
+    for a in tables:
+        for b in tables - {a}:
+            assert count_paths(a, b, {a}) <= 1, f"ambiguous filter paths {a} -> {b}"
+
+
+def test_artist_selection_reaches_the_facts():
+    """Clicking an artist must filter chart facts and track measures (via the bridge)."""
+    edges = {}
+    for rel in powerbi.RELATIONSHIPS:
+        frm, _, to, _ = rel
+        edges.setdefault(to, set()).add(frm)
+        if rel in powerbi.BIDIRECTIONAL:
+            edges.setdefault(frm, set()).add(to)
+    reach, stack = set(), ["dim_artist"]
+    while stack:
+        for n in edges.get(stack.pop(), ()):
+            if n not in reach:
+                reach.add(n)
+                stack.append(n)
+    assert {"fact_chart_entry", "mart_track_performance", "dim_track"} <= reach
