@@ -137,6 +137,8 @@ Business-level tables built on the star schema. Each one reconciles exactly to
 | `is_right_censored` | Still charting on the last snapshot, so chart life is a lower bound. |
 | `has_full_180_day_window` | Debuted at least 180 days before the last snapshot. |
 | `chart_days_first_180` | Chart days within 180 days of debut: the fair longevity metric. |
+| `chart_life_bucket`, `chart_life_bucket_order` | Total chart life grouped as `1 day`, `2-7 days`, …, `180+ days` (with a sort key). |
+| `album_cover_url` | Cover art of the track's current version. |
 
 ## `mart_artist_performance`
 

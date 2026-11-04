@@ -60,6 +60,11 @@ credits AS (
     SELECT track_key, max(n_credited_artists) AS n_credited_artists
     FROM gold.bridge_track_artist
     GROUP BY track_key
+),
+current_cover AS (
+    SELECT track_key, album_cover_url
+    FROM gold.dim_track_version
+    WHERE is_current
 )
 SELECT
     t.track_key,
@@ -102,13 +107,31 @@ SELECT
     db.debut_date = b.first_snapshot                           AS is_left_censored,
     l.last_chart_date = b.last_snapshot                        AS is_right_censored,
     db.debut_date <= b.last_snapshot - 180                     AS has_full_180_day_window,
-    CAST(f180.chart_days_first_180 AS INTEGER)                 AS chart_days_first_180
+    CAST(f180.chart_days_first_180 AS INTEGER)                 AS chart_days_first_180,
+    CASE
+        WHEN l.total_chart_days = 1    THEN '1 day'
+        WHEN l.total_chart_days <= 7   THEN '2-7 days'
+        WHEN l.total_chart_days <= 30  THEN '8-30 days'
+        WHEN l.total_chart_days <= 90  THEN '31-90 days'
+        WHEN l.total_chart_days <= 180 THEN '91-180 days'
+        ELSE '180+ days'
+    END                                                        AS chart_life_bucket,
+    CAST(CASE
+        WHEN l.total_chart_days = 1    THEN 1
+        WHEN l.total_chart_days <= 7   THEN 2
+        WHEN l.total_chart_days <= 30  THEN 3
+        WHEN l.total_chart_days <= 90  THEN 4
+        WHEN l.total_chart_days <= 180 THEN 5
+        ELSE 6
+    END AS INTEGER)                                            AS chart_life_bucket_order,
+    cc.album_cover_url
 FROM gold.dim_track AS t
 JOIN debut AS db USING (track_key)
 JOIN first_peak AS fp USING (track_key)
 JOIN lifetime AS l USING (track_key)
 JOIN first_180 AS f180 USING (track_key)
 JOIN credits AS c USING (track_key)
+JOIN current_cover AS cc USING (track_key)
 JOIN gold.dim_track_version AS v ON v.track_version_key = db.debut_version_key
 CROSS JOIN bounds AS b
 ORDER BY total_chart_days DESC, track_title;
