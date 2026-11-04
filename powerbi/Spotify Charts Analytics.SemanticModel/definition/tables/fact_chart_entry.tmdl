@@ -97,6 +97,94 @@ table fact_chart_entry
 		displayFolder: Point in time
 		lineageTag: e9b3264a-3030-5c9b-86b6-fa3a8ee9b35e
 
+	measure 'Artists Charting' =
+			CALCULATE (
+			    DISTINCTCOUNT ( bridge_track_artist[artist_key] ),
+			    CROSSFILTER ( fact_chart_entry[track_key], dim_track[track_key], BOTH )
+			)
+		formatString: #,0
+		displayFolder: Artists
+		lineageTag: b43d9c6f-e4af-5656-9a5e-9cf3b0a18bda
+
+	measure 'Popularity Max' = 100
+		formatString: 0
+		displayFolder: Chart
+		lineageTag: fa92bb37-7e0b-5d70-b366-ae7dea35d9e7
+
+	measure 'Popularity Remainder' = [Popularity Max] - [Avg Popularity]
+		formatString: 0.0
+		displayFolder: Chart
+		lineageTag: ab3085a7-dfcb-5b9c-8150-66adb937842f
+
+	measure 'Artist Tracks' =
+			CALCULATE (
+			    DISTINCTCOUNT ( bridge_track_artist[track_key] ),
+			    CROSSFILTER ( fact_chart_entry[track_key], dim_track[track_key], BOTH )
+			)
+		formatString: #,0
+		displayFolder: Artists
+		lineageTag: 8d77461e-7932-5f4f-a64d-d14b9892705b
+
+	measure 'Artist Avg Popularity' =
+			CALCULATE (
+			    [Avg Popularity],
+			    CROSSFILTER ( bridge_track_artist[track_key], dim_track[track_key], BOTH )
+			)
+		formatString: 0.0
+		displayFolder: Artists
+		lineageTag: 497d36df-c6f8-5690-9da8-9157c681a5b8
+
+	measure 'Artist Days at #1' =
+			COALESCE (
+			    CALCULATE (
+			        [Days at #1],
+			        CROSSFILTER ( bridge_track_artist[track_key], dim_track[track_key], BOTH )
+			    ),
+			    0
+			)
+		formatString: #,0
+		displayFolder: Artists
+		lineageTag: 7a77ffc0-f179-58ae-8ee6-889ae90e8d0b
+
+	measure 'Artist Best Position' =
+			CALCULATE (
+			    [Best Position],
+			    CROSSFILTER ( bridge_track_artist[track_key], dim_track[track_key], BOTH )
+			)
+		formatString: 0
+		displayFolder: Artists
+		lineageTag: 8912ad59-cc41-5fb0-af26-f0a963e4ed46
+
+	measure 'Top 5 Artist Days' =
+			VAR Rank =
+			    RANKX ( ALL ( dim_artist[artist_name] ), [Artist Weighted Chart Days], , DESC )
+			RETURN
+			    IF ( Rank <= 5, [Artist Weighted Chart Days] )
+		formatString: #,0
+		displayFolder: Artists
+		lineageTag: cc741de8-bb8b-5885-ad89-1d2b43c4d730
+
+	measure 'Artist Insight' =
+			VAR Artist = SELECTEDVALUE ( dim_artist[artist_name] )
+			RETURN
+			    IF (
+			        ISBLANK ( Artist ),
+			        "Select an artist to see their chart story.",
+			        Artist & " holds " & FORMAT ( [Artist Share of Chart], "0.0%" )
+			            & " of all chart slots across " & FORMAT ( [Artist Tracks], "0" )
+			            & " songs, with " & FORMAT ( [Artist Days at #1], "0" ) & " days at #1."
+			    )
+		displayFolder: Artists
+		lineageTag: 760cf1fe-663c-55af-8525-eaddc855fa2e
+
+	measure 'Chart Strength' =
+			VAR Position = MIN ( fact_chart_entry[chart_position] )
+			RETURN
+			    IF ( NOT ISBLANK ( Position ), 51 - Position )
+		formatString: 0
+		displayFolder: Movement
+		lineageTag: 545c1638-1d3f-5d87-b863-35c44449e94b
+
 	column date_key
 		dataType: int64
 		isHidden

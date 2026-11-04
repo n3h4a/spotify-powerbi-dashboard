@@ -1,10 +1,10 @@
 {
   "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/pagesMetadata/1.0.0/schema.json",
   "pageOrder": [
-    "overview",
-    "dynamics",
-    "tracks",
-    "artists"
+    "a6b65cb460188e0b9a45",
+    "062bc453eddd068e5c3d",
+    "633e3ec15c165d9641e8",
+    "ac7abdac6a96496d0407"
   ],
-  "activePageName": "overview"
+  "activePageName": "a6b65cb460188e0b9a45"
 }

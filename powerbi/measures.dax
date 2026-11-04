@@ -118,3 +118,132 @@ AVERAGE ( mart_daily_chart[holiday_track_share] )
 // Share of the chart held by collaborations.  [table: mart_daily_chart]
 Collaboration Share =
 AVERAGE ( mart_daily_chart[collaboration_share] )
+
+// ---------------------------------------------------------------- Artists
+// Distinct individual artists (collaborations split) on the chart.  [table: fact_chart_entry]
+Artists Charting =
+CALCULATE (
+    DISTINCTCOUNT ( bridge_track_artist[artist_key] ),
+    CROSSFILTER ( fact_chart_entry[track_key], dim_track[track_key], BOTH )
+)
+
+// ---------------------------------------------------------------- Chart
+// Top of the popularity scale (gauge maximum).  [table: fact_chart_entry]
+Popularity Max =
+100
+
+// Distance from average popularity to 100 (progress bars).  [table: fact_chart_entry]
+Popularity Remainder =
+[Popularity Max] - [Avg Popularity]
+
+// ---------------------------------------------------------------- Artists
+// Distinct tracks credited to the artist(s) in context.  [table: fact_chart_entry]
+Artist Tracks =
+CALCULATE (
+    DISTINCTCOUNT ( bridge_track_artist[track_key] ),
+    CROSSFILTER ( fact_chart_entry[track_key], dim_track[track_key], BOTH )
+)
+
+// Average popularity of the artist's chart entries.  [table: fact_chart_entry]
+Artist Avg Popularity =
+CALCULATE (
+    [Avg Popularity],
+    CROSSFILTER ( bridge_track_artist[track_key], dim_track[track_key], BOTH )
+)
+
+// Days the artist held position 1.  [table: fact_chart_entry]
+Artist Days at #1 =
+COALESCE (
+    CALCULATE (
+        [Days at #1],
+        CROSSFILTER ( bridge_track_artist[track_key], dim_track[track_key], BOTH )
+    ),
+    0
+)
+
+// Best chart position reached by the artist.  [table: fact_chart_entry]
+Artist Best Position =
+CALCULATE (
+    [Best Position],
+    CROSSFILTER ( bridge_track_artist[track_key], dim_track[track_key], BOTH )
+)
+
+// Weighted chart days, shown only for the top 5 artists.  [table: fact_chart_entry]
+Top 5 Artist Days =
+VAR Rank =
+    RANKX ( ALL ( dim_artist[artist_name] ), [Artist Weighted Chart Days], , DESC )
+RETURN
+    IF ( Rank <= 5, [Artist Weighted Chart Days] )
+
+// One-sentence summary of the selected artist.  [table: fact_chart_entry]
+Artist Insight =
+VAR Artist = SELECTEDVALUE ( dim_artist[artist_name] )
+RETURN
+    IF (
+        ISBLANK ( Artist ),
+        "Select an artist to see their chart story.",
+        Artist & " holds " & FORMAT ( [Artist Share of Chart], "0.0%" )
+            & " of all chart slots across " & FORMAT ( [Artist Tracks], "0" )
+            & " songs, with " & FORMAT ( [Artist Days at #1], "0" ) & " days at #1."
+    )
+
+// ---------------------------------------------------------------- Movement
+// 51 minus chart position: 50 = #1, 1 = #50 (for chart journeys).  [table: fact_chart_entry]
+Chart Strength =
+VAR Position = MIN ( fact_chart_entry[chart_position] )
+RETURN
+    IF ( NOT ISBLANK ( Position ), 51 - Position )
+
+// ---------------------------------------------------------------- Track life
+// Total days on chart (respects artist selection).  [table: mart_track_performance]
+Days on Chart =
+CALCULATE (
+    SUM ( mart_track_performance[total_chart_days] ),
+    CROSSFILTER ( bridge_track_artist[track_key], dim_track[track_key], BOTH )
+)
+
+// Number of tracks.  [table: mart_track_performance]
+Tracks =
+COUNTROWS ( mart_track_performance )
+
+// The song with the most days on chart in the current selection.  [table: mart_track_performance]
+Top Track =
+CALCULATE (
+    MAXX (
+        TOPN ( 1, VALUES ( dim_track[track_title] ),
+            CALCULATE ( SUM ( mart_track_performance[total_chart_days] ) ) ),
+        dim_track[track_title]
+    ),
+    CROSSFILTER ( bridge_track_artist[track_key], dim_track[track_key], BOTH )
+)
+
+// Best chart position reached.  [table: mart_track_performance]
+Peak Position =
+MIN ( mart_track_performance[peak_position] )
+
+// Chart position on the debut day.  [table: mart_track_performance]
+Debut Position =
+MIN ( mart_track_performance[debut_position] )
+
+// Release year of the selected song.  [table: mart_track_performance]
+Release Year =
+YEAR ( MIN ( mart_track_performance[release_date] ) )
+
+// Whether the selected song is explicit.  [table: mart_track_performance]
+Explicit Label =
+IF (
+    HASONEVALUE ( dim_track[track_key] ),
+    IF (
+        CALCULATE (
+            COUNTROWS ( mart_track_performance ),
+            mart_track_performance[debut_is_explicit] = TRUE ()
+        ) > 0,
+        "Yes",
+        "No"
+    ),
+    "-"
+)
+
+// Release type of the selected song when it debuted.  [table: mart_track_performance]
+Album Type =
+SELECTEDVALUE ( mart_track_performance[debut_album_type], "-" )

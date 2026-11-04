@@ -28,6 +28,67 @@ table mart_track_performance
 		displayFolder: Track life
 		lineageTag: 9a747b28-6c8a-52e9-82b6-d8bc02211132
 
+	measure 'Days on Chart' =
+			CALCULATE (
+			    SUM ( mart_track_performance[total_chart_days] ),
+			    CROSSFILTER ( bridge_track_artist[track_key], dim_track[track_key], BOTH )
+			)
+		formatString: #,0
+		displayFolder: Track life
+		lineageTag: 5759893a-0422-5bb3-8c41-88a164b50cd0
+
+	measure Tracks = COUNTROWS ( mart_track_performance )
+		formatString: #,0
+		displayFolder: Track life
+		lineageTag: 89f9d8d5-82df-5e96-869e-ee81244906fc
+
+	measure 'Top Track' =
+			CALCULATE (
+			    MAXX (
+			        TOPN ( 1, VALUES ( dim_track[track_title] ),
+			            CALCULATE ( SUM ( mart_track_performance[total_chart_days] ) ) ),
+			        dim_track[track_title]
+			    ),
+			    CROSSFILTER ( bridge_track_artist[track_key], dim_track[track_key], BOTH )
+			)
+		displayFolder: Track life
+		lineageTag: 4604cea3-4729-50b9-a433-c72e9492e3c8
+
+	measure 'Peak Position' = MIN ( mart_track_performance[peak_position] )
+		formatString: 0
+		displayFolder: Track life
+		lineageTag: 4c89c35c-826f-50b9-be29-661409d7c2e0
+
+	measure 'Debut Position' = MIN ( mart_track_performance[debut_position] )
+		formatString: 0
+		displayFolder: Track life
+		lineageTag: 28523857-8785-5fb5-87fb-fa541ee77711
+
+	measure 'Release Year' = YEAR ( MIN ( mart_track_performance[release_date] ) )
+		formatString: 0
+		displayFolder: Track life
+		lineageTag: d8f88238-d4fb-505c-8006-6e8546184e29
+
+	measure 'Explicit Label' =
+			IF (
+			    HASONEVALUE ( dim_track[track_key] ),
+			    IF (
+			        CALCULATE (
+			            COUNTROWS ( mart_track_performance ),
+			            mart_track_performance[debut_is_explicit] = TRUE ()
+			        ) > 0,
+			        "Yes",
+			        "No"
+			    ),
+			    "-"
+			)
+		displayFolder: Track life
+		lineageTag: d809f3e1-492b-5ca3-8c69-a78e0c681aa0
+
+	measure 'Album Type' = SELECTEDVALUE ( mart_track_performance[debut_album_type], "-" )
+		displayFolder: Track life
+		lineageTag: 21fb8bc9-5f35-54c1-b71d-5525725a887b
+
 	column track_key
 		dataType: string
 		isHidden
@@ -301,6 +362,34 @@ table mart_track_performance
 		lineageTag: 1cf93346-fbaf-558d-ba70-cbac6cd3b79c
 		summarizeBy: none
 		sourceColumn: chart_days_first_180
+
+		annotation SummarizationSetBy = User
+
+	column chart_life_bucket
+		dataType: string
+		lineageTag: 9bf46445-c2ae-5798-aa17-d5428952b6c7
+		summarizeBy: none
+		sourceColumn: chart_life_bucket
+		sortByColumn: chart_life_bucket_order
+
+		annotation SummarizationSetBy = User
+
+	column chart_life_bucket_order
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 1212ba55-89e6-5cfc-be1f-c79ff3cc84f4
+		summarizeBy: none
+		sourceColumn: chart_life_bucket_order
+
+		annotation SummarizationSetBy = User
+
+	column album_cover_url
+		dataType: string
+		lineageTag: 470ba884-46f2-51b7-a59d-a2f8ffbd1073
+		summarizeBy: none
+		sourceColumn: album_cover_url
+		dataCategory: ImageUrl
 
 		annotation SummarizationSetBy = User
 

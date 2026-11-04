@@ -21,6 +21,7 @@ table bridge_track_artist
 
 	column credit_order
 		dataType: int64
+		isHidden
 		formatString: 0
 		lineageTag: 967c9bb1-aaf4-5f08-a2cf-49101a03b71c
 		summarizeBy: none

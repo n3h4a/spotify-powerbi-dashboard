@@ -1,25 +1,129 @@
 {
-  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/report/3.0.0/schema.json",
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/report/3.3.0/schema.json",
   "themeCollection": {
-    "customTheme": {
-      "name": "SpotifyCharts.json",
+    "baseTheme": {
+      "name": "CY26SU07",
       "reportVersionAtImport": {
-        "visual": "2.2.0",
-        "page": "2.0.0",
-        "report": "3.0.0"
+        "visual": "2.11.0",
+        "report": "3.4.0",
+        "page": "2.3.1"
       },
-      "type": "RegisteredResources"
+      "type": "SharedResources"
     }
   },
+  "objects": {
+    "section": [
+      {
+        "properties": {
+          "verticalAlignment": {
+            "expr": {
+              "Literal": {
+                "Value": "'Top'"
+              }
+            }
+          }
+        }
+      }
+    ],
+    "outspacePane": [
+      {
+        "properties": {
+          "expanded": {
+            "expr": {
+              "Literal": {
+                "Value": "true"
+              }
+            }
+          }
+        }
+      }
+    ]
+  },
   "resourcePackages": [
+    {
+      "name": "SharedResources",
+      "type": "SharedResources",
+      "items": [
+        {
+          "name": "CY26SU07",
+          "path": "BaseThemes/CY26SU07.json",
+          "type": "BaseTheme"
+        }
+      ]
+    },
     {
       "name": "RegisteredResources",
       "type": "RegisteredResources",
       "items": [
         {
-          "name": "SpotifyCharts.json",
-          "path": "SpotifyCharts.json",
-          "type": "CustomTheme"
+          "name": "Group_1230284675404037187.png",
+          "path": "Group_1230284675404037187.png",
+          "type": "Image"
+        },
+        {
+          "name": "Group_24020540067122368222.png",
+          "path": "Group_24020540067122368222.png",
+          "type": "Image"
+        },
+        {
+          "name": "Group_255124656944072106.png",
+          "path": "Group_255124656944072106.png",
+          "type": "Image"
+        },
+        {
+          "name": "Group_266060996132272352.png",
+          "path": "Group_266060996132272352.png",
+          "type": "Image"
+        },
+        {
+          "name": "duration42592753813374884.png",
+          "path": "duration42592753813374884.png",
+          "type": "Image"
+        },
+        {
+          "name": "music-player_(1)07048875326266224.png",
+          "path": "music-player_(1)07048875326266224.png",
+          "type": "Image"
+        },
+        {
+          "name": "music-player_(1)6142995679337957.png",
+          "path": "music-player_(1)6142995679337957.png",
+          "type": "Image"
+        },
+        {
+          "name": "next_(1)8877414518401797.png",
+          "path": "next_(1)8877414518401797.png",
+          "type": "Image"
+        },
+        {
+          "name": "next_(1)_-_Copy45910247113418157.png",
+          "path": "next_(1)_-_Copy45910247113418157.png",
+          "type": "Image"
+        },
+        {
+          "name": "pause_(4)2282717007507159.png",
+          "path": "pause_(4)2282717007507159.png",
+          "type": "Image"
+        },
+        {
+          "name": "trending40766980175459044.png",
+          "path": "trending40766980175459044.png",
+          "type": "Image"
+        },
+        {
+          "name": "trending8935675547043426.png",
+          "path": "trending8935675547043426.png",
+          "type": "Image"
+        },
+        {
+          "name": "voice-recording07166306491135066.png",
+          "path": "voice-recording07166306491135066.png",
+          "type": "Image"
+        },
+        {
+          "name": "voice-recording5021864664892306.png",
+          "path": "voice-recording5021864664892306.png",
+          "type": "Image"
         }
       ]
     }
