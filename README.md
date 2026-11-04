@@ -10,7 +10,7 @@
   <img src="https://img.shields.io/badge/DuckDB-SQL-FFF000?logo=duckdb&logoColor=black" alt="DuckDB"/>
   <img src="https://img.shields.io/badge/Power%20BI-Dashboard-F2C811?logo=powerbi&logoColor=black" alt="Power BI"/>
   <img src="https://img.shields.io/badge/scikit--learn-ML-F7931E?logo=scikitlearn&logoColor=white" alt="scikit-learn"/>
-  <img src="https://img.shields.io/badge/tests-72%20passing-0A9EDC?logo=pytest&logoColor=white" alt="pytest"/>
+  <img src="https://img.shields.io/badge/tests-77%20passing-0A9EDC?logo=pytest&logoColor=white" alt="pytest"/>
   <img src="https://img.shields.io/badge/data%20quality-42%20checks-1DB954" alt="Data quality"/>
 </p>
 
@@ -30,8 +30,8 @@
 | **Analysis** | 7 business questions answered in SQL, tested with **Mann-Whitney U** and **Spearman**, written up in a [generated insights report](docs/insights.md) |
 | **Data science** | **Survival analysis** (Kaplan-Meier, log-rank, landmark analysis, Cox model) and a **longevity classifier**: test **ROC-AUC 0.91** on a time-based holdout, documented in a [model report](docs/model_report.md) with a model card |
 | **Quality** | **42 automated data-quality checks**, run in CI, with a [generated report](docs/data_quality_report.md) |
-| **Testing** | 72 tests: unit, integration, corruption tests, a **future-data leakage test**, and a simulation that checks the statistical test is calibrated |
-| **BI** | **Power BI as code:** a generated Power BI Project (TMDL model + PBIR report, 20 DAX measures, 4 pages) that loads its data from this repo. [Guide](docs/powerbi_guide.md) |
+| **Testing** | 77 tests: unit, integration, corruption tests, a **future-data leakage test**, and a simulation that checks the statistical test is calibrated |
+| **BI** | **Power BI as code:** a generated Power BI Project (TMDL model + PBIR report, 38 DAX measures, 4 pages in the original Spotify design) that loads its data from this repo. [Guide](docs/powerbi_guide.md) |
 
 ---
 
@@ -129,7 +129,7 @@ make all       # build warehouse → run quality checks → export tables
 make insights  # run the analyses → docs/insights.md + docs/figures/
 make model     # survival analysis + classifier → docs/model_report.md
 make powerbi   # regenerate the Power BI project in powerbi/
-make test      # 72 tests
+make test      # 77 tests
 ```
 
 ```text
@@ -218,10 +218,11 @@ model is in TMDL and the report in PBIR JSON. It is generated from the warehouse
 `make powerbi`, version-controlled, and reviewed as text diffs. It contains:
 
 - a **9-table star-schema model** with single-direction relationships, a marked date table
-  and **20 documented DAX measures** (including fair collaboration credit through the bridge
+  and **38 documented DAX measures** (including fair collaboration credit through the bridge
   table, and point-in-time SCD2 measures)
-- **4 report pages:** Overview, Chart Dynamics, Tracks and Artists, using the project's
-  colour-blind-safe palette as the theme
+- **the original Spotify-style design, kept intact:** the generator reads the hand-designed
+  dashboard below straight from its `.pbix` (backgrounds, cards, icons, album-cover player,
+  navigation buttons, theme) and re-binds every visual to the tested star schema
 - data that **loads straight from this repo**: open the `.pbip` in Power BI Desktop, click
   *Refresh*, and it works on any machine
 
@@ -251,8 +252,9 @@ See the **[Power BI guide](docs/powerbi_guide.md)**.
 <p align="center"><img src="screenshots/songs.png" width="850"/></p>
 </details>
 
-This first version was built by hand on the raw CSV; the generated project above
-supersedes it.
+These screenshots show the design. The generated project keeps this exact look, with
+every visual now powered by the star schema: correctly counted artists, weighted
+collaboration credit, chart journeys and longevity insights.
 
 ---
 

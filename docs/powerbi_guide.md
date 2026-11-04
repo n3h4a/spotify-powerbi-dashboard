@@ -16,8 +16,9 @@ powerbi/
 
 ## 1. Open it
 
-1. Install or update **Power BI Desktop**. Any version from late 2025 onwards reads this
-   project format.
+1. Install or update **Power BI Desktop** to a 2026 release. The design uses the new
+   card and button-slicer visuals and the July 2026 theme, the same version the original
+   dashboard was built with.
 2. Clone the repo, or download it as a ZIP, and open
    **`powerbi/Spotify Charts Analytics.pbip`**.
 3. Click **Refresh** (Home ribbon). By default the data loads straight from this GitHub
@@ -65,7 +66,7 @@ Design choices:
 
 ### Measures
 
-20 DAX measures in display folders (Chart, Movement, Artists, Point in time, Track life,
+38 DAX measures in display folders (Chart, Movement, Artists, Point in time, Track life,
 Chart health). All are listed with descriptions in
 [`powerbi/measures.dax`](../powerbi/measures.dax). Highlights:
 
@@ -76,16 +77,32 @@ Chart health). All are listed with descriptions in
 - **`Median Days in First 180`** applies the same censoring rules as the statistical
   analysis.
 
-### Report pages
+### Report pages: the original design, on the new model
 
-| Page | Contents |
-|---|---|
-| **Overview** | KPI cards (entries, tracks, median chart life, peaked-on-debut %, artist HHI) · daily artist concentration · share of chart by artist |
-| **Chart Dynamics** | Quarter slicer · turnover, holiday, collaboration and explicit shares · the Christmas cliff · longevity by launch shape and by release age |
-| **Tracks** | Lead-artist slicer · every track's debut, peak, chart days, days at #1 and longest streak |
-| **Artists** | Leaderboard by weighted share of chart |
+The report **re-creates the original hand-designed dashboard**
+(`dashboard/spotify_dashboard.pbix`): the same dark page backgrounds, rounded cards,
+Spotify-green accents, icons, album-cover "player", navigation buttons and base theme.
+The generator ([`powerbi_report.py`](../src/spotify_pipeline/powerbi_report.py)) reads
+that design straight from the `.pbix`, keeps every visual's position and formatting, and
+re-binds only the data. Each visual now reads the tested star schema instead of the raw
+CSV:
 
-The theme uses the same colour-blind-safe palette as the charts in `docs/figures/`.
+| Page | Visual | Before (raw CSV) | Now (star schema) |
+|---|---|---|---|
+| **Overview** | KPI cards | total tracks, popularity, artists (342, miscounted), explicit % | chart entries, popularity, **346** individually counted artists, explicit share (point in time) |
+| | Top 5 Artists | raw song counts | **weighted** chart days (collaborations split fairly) |
+| | Area chart | popularity by quarter | **artist dominance (HHI) by month**: album drops |
+| | Bottom left | songs by artist | songs by artist (credits split correctly) |
+| | Bottom middle | top songs by popularity | **longest chart runs** |
+| | Bottom right | duration vs popularity | **how long tracks last** (chart-life distribution) |
+| **Artists** | Browse table | artist strings incl. "A & B" | individual artists, songs, share of chart |
+| | Cards | songs, popularity, #1 hits | songs, popularity, days at #1 (via the bridge) |
+| | Summary card + insight | most popular song etc. | longest-charting song, share, weighted days, best position, and a generated one-sentence **artist insight** |
+| **Songs** | Cards | duration, popularity, best position | **days on chart, peak position, debut position** |
+| | Bottom chart | total tracks by artist | the song's **chart journey** over time |
+
+The Browse Songs list and the green "player" on every page show album covers from the
+model. The month/quarter toggle was dropped, since its field parameter belonged to the old model.
 
 ## 3. Check the numbers
 
@@ -104,9 +121,14 @@ These must match the warehouse exactly:
 
 You can edit freely in Power BI Desktop. Save, and the `.pbip` folders update as
 readable text diffs. Note that `make powerbi` **regenerates** the project from code and
-overwrites manual edits to generated files. So either make lasting changes in
-[`src/spotify_pipeline/powerbi.py`](../src/spotify_pipeline/powerbi.py), or stop
-regenerating once you start customising by hand.
+overwrites manual edits to generated files. Lasting changes go in two places:
+
+- **Design** (colours, layout, backgrounds): edit `dashboard/spotify_dashboard.pbix`
+  in Power BI Desktop, save, and run `make powerbi`. The new report picks up the
+  redesign automatically.
+- **Data bindings and measures:** edit `BINDINGS` in
+  [`powerbi_report.py`](../src/spotify_pipeline/powerbi_report.py) and `MEASURES` in
+  [`powerbi.py`](../src/spotify_pipeline/powerbi.py).
 
 ## 5. How it's verified
 
@@ -114,12 +136,13 @@ Power BI Desktop can't run in CI (it's Windows-only), so the project is checked
 statically instead:
 
 - Every PBIR JSON file was validated against **Microsoft's published Fabric JSON
-  schemas** (report 3.0.0, page 2.0.0, visual container 2.2.0).
+  schemas** (report 3.3.0, page 2.1.0, visual container 2.11.0).
 - [`tests/test_powerbi.py`](../tests/test_powerbi.py) checks that every field used by a
   visual exists in the model, every DAX reference resolves, every relationship column
   exists, TMDL indentation is valid, no Power Query step shadows a library function,
-  the committed data equals the warehouse, and the committed project matches a fresh
-  regeneration.
+  the committed data equals the warehouse, the committed project matches a fresh
+  regeneration, every navigation button targets a real page, every image the design
+  uses is packaged, and nothing still refers to the old CSV table.
 
 If Power BI Desktop reports a problem when opening the project, the error message names
 the exact file and line. Open an issue with that message.
