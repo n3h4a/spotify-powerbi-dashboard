@@ -31,21 +31,22 @@ Design rationale is in [data_model.md](data_model.md).
 
 ## `dim_track`
 
-**Grain:** one row per recording, identified by title + lead artist · **Rows:** 807
+**Grain:** one row per recording, identified by title + lead artist · **Rows:** 797
 
 | Column | Type | Description |
 |---|---|---|
 | `track_key` | VARCHAR | PK. `md5('track|' + lower(title) + '|' + lower(lead_artist))`. |
 | `track_title` | VARCHAR | Song title as first seen. |
 | `lead_artist_name` | VARCHAR | First-credited artist. Stays the same when featured credits change. |
-| `track_label` | VARCHAR | `title · lead artist`: a unique display name (several songs share a title). |
+| `track_label` | VARCHAR | Unique display name: the title, plus `(lead artist)` only when several songs share that title. |
+| `chart_rank` | INTEGER | 1 = most days on the chart. Orders song lists by success. |
 | `lead_artist_key` | VARCHAR | FK → `dim_artist`. |
 | `first_chart_date` | DATE | First day the track appears in the dataset. |
 | `last_chart_date` | DATE | Last day the track appears in the dataset. |
 
 ## `dim_track_version` (SCD Type 2)
 
-**Grain:** one row per track per unbroken run of identical attributes · **Rows:** 1,079
+**Grain:** one row per track per unbroken run of identical attributes · **Rows:** 1,089
 
 | Column | Type | Description |
 |---|---|---|
@@ -76,7 +77,7 @@ Design rationale is in [data_model.md](data_model.md).
 
 ## `bridge_track_artist`
 
-**Grain:** one row per track per credited artist · **Rows:** 1,003
+**Grain:** one row per track per credited artist · **Rows:** 986
 
 | Column | Type | Description |
 |---|---|---|
@@ -116,7 +117,7 @@ Business-level tables built on the star schema. Each one reconciles exactly to
 
 ## `mart_track_performance`
 
-**Grain:** one row per track · **Rows:** 807
+**Grain:** one row per track · **Rows:** 797
 
 | Column | Description |
 |---|---|
@@ -178,7 +179,7 @@ Business-level tables built on the star schema. Each one reconciles exactly to
 
 ## `ml.track_features`
 
-**Grain:** one row per track with a known debut · **Rows:** 757 ·
+**Grain:** one row per track with a known debut · **Rows:** 747 ·
 Full method in [model_report.md](model_report.md)
 
 | Column group | Columns | Available at |

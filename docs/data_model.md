@@ -112,13 +112,21 @@ Keying on the full credit would split one song into several "tracks" and break c
 metrics. Instead, **track = (title, lead artist)**: the lead artist stays the same even
 when featured credits change. The `track_charts_once_per_day` check validates the rule:
 if two different recordings collided on one key, a key would sometimes appear twice in
-one day's chart. It never does. The rule resolves the source into **807 tracks**.
+one day's chart. It never does.
+
+One refinement: occasionally the *lead* credit changes too. On 16 Feb 2024 Spotify
+re-credited seven *Vultures 1* songs from "Kanye West" to his duo "¥$", and three
+songs were re-listed on compilations under "Various Artists". An identical title **and
+an identical duration (to the millisecond)** identifies these as one recording, which is
+credited to the lead it charted under most. A quality check (`no_split_recordings`)
+keeps it that way, and "Various Artists" never takes credit from a real artist. The
+source resolves into **797 tracks**.
 
 ### 3.2 Slowly Changing Dimension Type 2 for track attributes
 
 While a song charts, its descriptive attributes change: a single is re-released on an album
 (`album_type`, `album_total_tracks`, cover art and release date change), a featured artist
-is dropped, or the explicit flag flips. **133 of 807 tracks (16%) change at least once.**
+is dropped, or the explicit flag flips. **140 of 797 tracks (18%) change at least once.**
 
 `dim_track_version` stores each unbroken run of identical attributes as a version with a
 `[valid_from, valid_to]` window. This is the classic **gaps-and-islands** pattern:
@@ -131,7 +139,7 @@ is dropped, or the explicit flag flips. **133 of 807 tracks (16%) change at leas
 Each fact row stores the `track_version_key` that was valid that day, so a report on
 "singles vs albums" uses what was true *at the time*, not what is true today.
 
-> **Source quirk:** for 19 tracks the chart flips back and forth between the single and the
+> **Source quirk:** for 21 tracks the chart flips back and forth between the single and the
 > album release of the same song (*Too Sweet* has 26 versions). SCD2 records this faithfully
 > and the quality report lists it. For analysis that needs one stable attribute per track,
 > filter `dim_track_version` on `is_current`.

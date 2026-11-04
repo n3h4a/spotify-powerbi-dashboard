@@ -175,10 +175,33 @@ CHECKS: tuple[Check, ...] = (
         _unique("gold.dim_track", "track_key"),
     ),
     Check(
+        "various_artists_never_shares_credit",
+        "business rule",
+        "error",
+        "The 'Various Artists' placeholder never takes credit alongside a real artist.",
+        """
+        SELECT b.track_key FROM gold.bridge_track_artist AS b
+        JOIN gold.dim_artist AS a USING (artist_key)
+        WHERE a.artist_name = 'Various Artists' AND b.n_credited_artists > 1
+        """,
+    ),
+    Check(
+        "no_split_recordings",
+        "uniqueness",
+        "error",
+        "No two tracks share a title and an identical duration (one recording split by a "
+        "lead-credit change).",
+        """
+        SELECT lower(e.track_title) AS title, e.duration_ms, count(DISTINCT e.track_key) AS n
+        FROM silver.int_chart_entries AS e
+        GROUP BY ALL HAVING count(DISTINCT e.track_key) > 1
+        """,
+    ),
+    Check(
         "dim_track_label_unique",
         "uniqueness",
         "error",
-        "track_label (title · lead artist) is unique, so charts never merge two songs.",
+        "track_label is unique, so charts never merge two songs.",
         _unique("gold.dim_track", "track_label"),
     ),
     Check(

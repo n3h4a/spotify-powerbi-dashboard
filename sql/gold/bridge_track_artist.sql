@@ -14,20 +14,38 @@ WITH credits AS (
     FROM silver.int_chart_entries AS e
     JOIN silver.artist_credit_parts AS p USING (artist_credit)
 ),
-per_artist AS (
+all_artists AS (
     SELECT track_key, artist_name_lc, min(credit_order) AS best_credit_order
     FROM credits
-    GROUP BY ALL
+    GROUP BY track_key, artist_name_lc
+),
+per_artist AS (
+    -- "Various Artists" is a compilation placeholder, not a performer: it never takes
+    -- credit from a real artist. It is kept only where it is a track's sole credit.
+    SELECT a.*
+    FROM all_artists AS a
+    WHERE a.artist_name_lc <> 'various artists'
+       OR NOT EXISTS (
+           SELECT 1 FROM all_artists AS o
+           WHERE o.track_key = a.track_key AND o.artist_name_lc <> 'various artists'
+       )
+),
+track_lead AS (
+    SELECT DISTINCT track_key, lower(lead_artist_name) AS lead_lc
+    FROM silver.int_chart_entries
 ),
 ranked AS (
     SELECT
-        track_key,
-        md5('artist|' || artist_name_lc) AS artist_key,
+        p.track_key,
+        md5('artist|' || p.artist_name_lc) AS artist_key,
+        -- The track's lead artist always comes first, then credit order.
         row_number() OVER (
-            PARTITION BY track_key ORDER BY best_credit_order, artist_name_lc
+            PARTITION BY p.track_key
+            ORDER BY p.artist_name_lc = l.lead_lc DESC, p.best_credit_order, p.artist_name_lc
         ) AS credit_order,
-        count(*) OVER (PARTITION BY track_key) AS n_credited_artists
-    FROM per_artist
+        count(*) OVER (PARTITION BY p.track_key) AS n_credited_artists
+    FROM per_artist AS p
+    JOIN track_lead AS l USING (track_key)
 )
 SELECT
     track_key,
