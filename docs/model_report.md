@@ -4,10 +4,10 @@
 
 ## Summary
 
-- **A week of chart data is worth more than everything known at launch.** On tracks that debuted in 2024 (held out from training), the week-one model reaches **ROC-AUC 0.91** (95% CI 0.87–0.95), against 0.71 for the launch-day model and 0.61 for debut position alone. The gain is **+0.21 AUC** (95% CI +0.13 to +0.28, paired bootstrap).
-- **The model is useful in practice.** Of the 20% of test tracks it ranks highest, 82% went on to chart 30+ days, against a base rate of 28% (**2.9x lift**).
+- **A week of chart data is worth more than everything known at launch.** On tracks that debuted in 2024 (held out from training), the week-one model reaches **ROC-AUC 0.91** (95% CI 0.86–0.95), against 0.69 for the launch-day model and 0.61 for debut position alone. The gain is **+0.22 AUC** (95% CI +0.14 to +0.29, paired bootstrap).
+- **The model is useful in practice.** Of the 20% of test tracks it ranks highest, 82% went on to chart 30+ days, against a base rate of 29% (**2.8x lift**).
 - **Survival analysis agrees.** Half of all tracks leave the chart within **7 chart days**. Among tracks still charting on day 7, those that climbed in week one have a median remaining life of **57 days**, against 8 for those that didn't (log-rank p < 0.001).
-- **At launch, 5 of 9 characteristics significantly change survival** in a Cox model: debut position (per 10 places lower) (HR 1.21); popularity at debut (per 10 points) (HR 0.91); new release (<=30 days old) (HR 1.45); released as a single (HR 0.58); duration (per minute) (HR 1.10). The model ranks tracks only moderately well (C-index 0.65), which confirms that launch-day information alone is limited.
+- **At launch, 5 of 9 characteristics significantly change survival** in a Cox model: debut position (per 10 places lower) (HR 1.21); popularity at debut (per 10 points) (HR 0.90); new release (<=30 days old) (HR 1.43); released as a single (HR 0.60); duration (per minute) (HR 1.10). The model ranks tracks only moderately well (C-index 0.65), which confirms that launch-day information alone is limited.
 
 ---
 
@@ -24,7 +24,7 @@
 
 - **Point-in-time features.** Launch-day features use only the debut snapshot, release metadata and the lead artist's chart history *before* the debut date. Week-one features use only the 7 days after debut. Tests in `tests/test_ml_features.py` check both rules.
 - **Labels need a full window.** Tracks debuting in the last 180 days of data have no label, because their outcome isn't known yet. They are scored on a watchlist (section 5) instead of being dropped silently or mislabelled.
-- **Time-based split.** Train on debuts before 01 Jan 2024 (n = 376), test on later debuts (n = 202). A random split would let the model learn from tracks released after the ones it predicts.
+- **Time-based split.** Train on debuts before 01 Jan 2024 (n = 376), test on later debuts (n = 195). A random split would let the model learn from tracks released after the ones it predicts.
 - **Model selection** uses 5-fold cross-validation inside the training set only. The test set is scored exactly once.
 - **Uncertainty.** Confidence intervals come from 2,000 paired bootstrap resamples of the test set.
 
@@ -34,19 +34,19 @@
 
 | Model | Features | Chosen algorithm | CV AUC (train) | Test AUC [95% CI] | Avg precision | Brier | Precision @ top 20% |
 |---|---|---|---:|---:|---:|---:|---:|
-| Debut position only | 1 feature | Gradient boosting | 0.557 | 0.606 [0.52–0.69] | 0.408 | 0.199 | 40% |
-| Launch-day model | 12 features | Logistic regression | 0.681 | 0.706 [0.62–0.78] | 0.499 | 0.181 | 50% |
-| Week-one model | 19 features | Logistic regression | 0.935 | 0.913 [0.87–0.95] | 0.801 | 0.106 | 82% |
+| Debut position only | 1 feature | Gradient boosting | 0.557 | 0.610 [0.53–0.69] | 0.430 | 0.204 | 41% |
+| Launch-day model | 12 features | Logistic regression | 0.681 | 0.691 [0.61–0.77] | 0.499 | 0.187 | 51% |
+| Week-one model | 19 features | Logistic regression | 0.935 | 0.908 [0.86–0.95] | 0.799 | 0.111 | 82% |
 
-Base rate in the test set: 28%. An uninformative model scores AUC 0.50 and average precision 0.282.
+Base rate in the test set: 29%. An uninformative model scores AUC 0.50 and average precision 0.292.
 
-**Does momentum really add value?** In a paired bootstrap, the week-one model beats the launch-day model by +0.208 AUC (95% CI +0.134 to +0.283, bootstrap p < 0.001).
+**Does momentum really add value?** In a paired bootstrap, the week-one model beats the launch-day model by +0.217 AUC (95% CI +0.142 to +0.292, bootstrap p < 0.001).
 
 ### What drives the prediction
 
 ![Feature importance](figures/10_feature_importance.png)
 
-Shuffling **week 1: position on day 7 (51 = off chart)** costs the most AUC (0.077). Week-one features account for 93% of the total importance. Permutation importance on the held-out set is model-agnostic, and unlike impurity-based importance it isn't biased towards high-cardinality features.
+Shuffling **week 1: position on day 7 (51 = off chart)** costs the most AUC (0.082). Week-one features account for 92% of the total importance. Permutation importance on the held-out set is model-agnostic, and unlike impurity-based importance it isn't biased towards high-cardinality features.
 
 ## 4. Survival analysis
 
@@ -54,7 +54,7 @@ Classification needs a fixed window and drops tracks whose outcome is unknown. S
 
 - **Time:** total days on chart.
 - **Event:** the chart life has ended, meaning the track was absent for at least the last 14 days of data.
-- **Tracks:** 757 with a known debut, of which 668 have ended their chart life and 89 are censored.
+- **Tracks:** 747 with a known debut, of which 658 have ended their chart life and 89 are censored.
 
 ### Kaplan-Meier by debut position
 
@@ -62,12 +62,12 @@ Classification needs a fixed window and drops tracks whose outcome is unknown. S
 
 | Group | Tracks | Exits | Median chart days | Still charting at 30 days | Still charting at 90 days |
 |---|---:|---:|---:|---:|---:|
-| All tracks | 757 | 668 | 7 | 26% | 13% |
-| Debuted #1-10 | 145 | 124 | 20 | 38% | 20% |
-| Debuted #11-25 | 199 | 181 | 5 | 14% | 7% |
-| Debuted #26-50 | 413 | 363 | 5 | 28% | 13% |
+| All tracks | 747 | 658 | 7 | 27% | 13% |
+| Debuted #1-10 | 143 | 122 | 21 | 38% | 20% |
+| Debuted #11-25 | 196 | 178 | 5 | 15% | 8% |
+| Debuted #26-50 | 408 | 358 | 5 | 28% | 14% |
 
-Log-rank test across the three groups: χ² = 27.2, p < 0.001.
+Log-rank test across the three groups: χ² = 28.6, p < 0.001.
 
 ### Landmark analysis: does week-one momentum matter?
 
@@ -77,7 +77,7 @@ Comparing tracks that climbed in week one with those that didn't, from debut, wo
 
 | Group | Tracks | Exits | Median remaining chart days | At 30 days | At 90 days |
 |---|---:|---:|---:|---:|---:|
-| Climbed in week one | 193 | 148 | 57 | 62% | 37% |
+| Climbed in week one | 194 | 149 | 57 | 62% | 37% |
 | Did not climb | 146 | 134 | 8 | 25% | 12% |
 
 Log-rank test: χ² = 50.7, p < 0.001.
@@ -90,15 +90,15 @@ A hazard ratio (HR) above 1 means the track tends to leave the chart sooner.
 
 | Covariate | HR | 95% CI | p | PH check p |
 |---|---:|---|---:|---:|
-| Debut position (per 10 places lower) | 1.21 | 1.14–1.28 | < 0.001 | < 0.001 |
-| Popularity at debut (per 10 points) | 0.91 | 0.88–0.93 | < 0.001 | 0.353 |
-| New release (<=30 days old) | 1.45 | 1.14–1.84 | 0.003 | 0.088 |
-| Collaboration | 1.18 | 0.95–1.47 | 0.140 | 0.617 |
-| Explicit | 1.17 | 0.99–1.38 | 0.063 | 0.853 |
-| Released as a single | 0.58 | 0.48–0.71 | < 0.001 | 0.100 |
-| Duration (per minute) | 1.10 | 1.01–1.21 | 0.037 | 0.690 |
-| Debuted in holiday season | 1.02 | 0.78–1.34 | 0.869 | 0.082 |
-| Artist's prior chart days (per doubling) | 0.98 | 0.96–1.01 | 0.149 | < 0.001 |
+| Debut position (per 10 places lower) | 1.21 | 1.14–1.29 | < 0.001 | < 0.001 |
+| Popularity at debut (per 10 points) | 0.90 | 0.88–0.93 | < 0.001 | 0.485 |
+| New release (<=30 days old) | 1.43 | 1.12–1.82 | 0.004 | 0.081 |
+| Collaboration | 1.15 | 0.92–1.44 | 0.221 | 0.401 |
+| Explicit | 1.17 | 0.99–1.38 | 0.060 | 0.943 |
+| Released as a single | 0.60 | 0.49–0.72 | < 0.001 | 0.088 |
+| Duration (per minute) | 1.10 | 1.00–1.21 | 0.039 | 0.771 |
+| Debuted in holiday season | 1.04 | 0.80–1.36 | 0.765 | 0.098 |
+| Artist's prior chart days (per doubling) | 0.98 | 0.96–1.01 | 0.194 | < 0.001 |
 
 Concordance (Harrell's C): **0.65**. The *PH check* tests whether each covariate's effect is constant over time, by correlating its Schoenfeld residuals with time. 2 covariate(s) show a time-varying effect (debut position (per 10 places lower), artist's prior chart days (per doubling)). Their hazard ratios are averages over the chart life and should be read as such. A stratified or time-varying Cox model is the natural next step.
 
@@ -112,19 +112,19 @@ The final week-one model is refit on all labelled tracks and scores the tracks t
 | Numb | Linkin Park | 2024-09-08 | 44 | 22 | 95% | 28 |
 | Tu Boda | Oscar Maydon | 2024-10-15 | 39 | 5 | 95% | 44 |
 | The Emptiness Machine | Linkin Park | 2024-09-08 | 7 | 6 | 95% | 76 |
-| Please Please Please | Sabrina Carpenter | 2024-06-09 | 6 | 1 | 95% | 170 |
 | Big Dawgs | Hanumankind | 2024-08-01 | 48 | 14 | 94% | 64 |
+| Please Please Please | Sabrina Carpenter | 2024-06-09 | 6 | 1 | 94% | 170 |
 | APT. | ROSÉ | 2024-10-20 | 3 | 1 | 93% | 39 |
 | Rockstar | LISA | 2024-06-30 | 14 | 12 | 93% | 46 |
-| Houdini | Eminem | 2024-06-02 | 3 | 3 | 92% | 77 |
-| REAL GANGSTA LOVE | Trueno | 2024-06-09 | 35 | 16 | 91% | 70 |
+| REAL GANGSTA LOVE | Trueno | 2024-06-09 | 35 | 16 | 92% | 70 |
+| Diet Pepsi | Addison Rae | 2024-10-03 | 50 | 30 | 91% | 31 |
 
 ## 6. Model card
 
 | | |
 |---|---|
 | **Model** | Logistic regression, 19 features |
-| **Training data** | 578 labelled tracks (debuts 2023-05-19 to 2024-05-31) |
+| **Training data** | 571 labelled tracks (debuts 2023-05-19 to 2024-05-31) |
 | **Intended use** | Ranking newly charting tracks by their likelihood of lasting, one week after debut |
 | **Not intended for** | Predicting stream counts, regional charts, or tracks outside the Global Top 50 |
 | **Known limitations** | Small sample; a single 18-month window; artist history only visible inside the dataset window, so early debuts have less of it; associations, not causal effects |

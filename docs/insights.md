@@ -4,19 +4,19 @@
 
 ## Executive summary
 
-1. **Chart life is short and extremely uneven.** The median track lasts **6 days**; 17% last a single day. The longest-charting 10% of tracks hold **58% of all chart slots**.
-2. **A day-one peak predicts a short life.** 65% of tracks peak on debut day. They spend a median **3 days** on the chart in their first 180 days, against **31 days** for tracks that climbed after debuting (p < 0.001, effect size 0.69).
+1. **Chart life is short and extremely uneven.** The median track lasts **6 days**; 17% last a single day. The longest-charting 10% of tracks hold **57% of all chart slots**.
+2. **A day-one peak predicts a short life.** 64% of tracks peak on debut day. They spend a median **3 days** on the chart in their first 180 days, against **31 days** for tracks that climbed after debuting (p < 0.001, effect size 0.69).
 3. **Debut position is a poor predictor of longevity** (Spearman ρ = -0.17, weak). Top-10 debuts last longer (median 15 days vs 4), but launch *momentum* matters more than launch *height*.
-4. **Collaborations do not last longer.** Median 4 vs 6 days; the difference is not statistically significant (p = 0.46).
-5. **Slow burners win.** Tracks that reached the chart 1–12 months after release last a median **21 days**, against 5 for brand-new releases.
+4. **Collaborations do not last longer.** Median 6 vs 6 days; the difference is not statistically significant (p = 0.96).
+5. **Slow burners win.** Tracks that reached the chart 1–12 months after release last a median **21 days**, against 6 for brand-new releases.
 6. **Album drops take over the chart.** On 21 Apr 2024, Taylor Swift held **30 of 50 slots** (HHI 3,669 against a typical 309). 3 of the 5 takeover events were Taylor Swift releases.
 7. **The Christmas cliff.** Holiday songs held **94%** of the chart on 26 Dec 2023 and 4% on 28 Dec.
 
 ## Method
 
-- **Source:** the gold star schema and marts built by this pipeline (807 tracks, 556 daily snapshots).
+- **Source:** the gold star schema and marts built by this pipeline (797 tracks, 556 daily snapshots).
 - **Censoring.** The data is a window into an ongoing chart. Tracks already charting on the first snapshot have unknown debuts (*left-censored*), and tracks still charting on the last snapshot have unfinished lives (*right-censored*). Ignoring this would understate how long recent tracks last.
-- **Analysis cohort (578 tracks):** tracks with a known debut and a full 180 days of follow-up. Longevity is compared on *chart days within 180 days of debut*, the same observation window for every track ([cohort.sql](../sql/analyses/cohort.sql)).
+- **Analysis cohort (571 tracks):** tracks with a known debut and a full 180 days of follow-up. Longevity is compared on *chart days within 180 days of debut*, the same observation window for every track ([cohort.sql](../sql/analyses/cohort.sql)).
 - **Statistics:** chart-day counts are heavily right-skewed, so groups are compared with medians and the two-sided **Mann-Whitney U test** (no normality assumption). Effect size is the rank-biserial correlation. Rank association uses **Spearman's ρ**.
 - **Holiday tracks** are tracks with at least 90% of their chart days between 15 Nov and 31 Dec that were released more than a year before debuting.
 
@@ -26,16 +26,16 @@
 
 ![Longevity distribution](figures/01_longevity.png)
 
-Of 757 tracks with a known debut, 54% spend a week or less on the chart. The distribution has a long tail: the top 10% of all tracks account for 58% of chart slots and the bottom half for 3.9%.
+Of 747 tracks with a known debut, 53% spend a week or less on the chart. The distribution has a long tail: the top 10% of all tracks account for 57% of chart slots and the bottom half for 4.0%.
 
 | Chart life | Tracks | Share |
 |---|---|---|
-| 1 day | 130 | 17.2% |
-| 2-7 days | 278 | 36.7% |
-| 8-30 days | 173 | 22.9% |
-| 31-90 days | 103 | 13.6% |
-| 91-180 days | 44 | 5.8% |
-| 180+ days | 29 | 3.8% |
+| 1 day | 127 | 17.0% |
+| 2-7 days | 271 | 36.3% |
+| 8-30 days | 173 | 23.2% |
+| 31-90 days | 103 | 13.8% |
+| 91-180 days | 44 | 5.9% |
+| 180+ days | 29 | 3.9% |
 
 SQL: [q1_longevity_distribution.sql](../sql/analyses/q1_longevity_distribution.sql) · [q2_hit_concentration.sql](../sql/analyses/q2_hit_concentration.sql)
 
@@ -46,21 +46,21 @@ SQL: [q1_longevity_distribution.sql](../sql/analyses/q1_longevity_distribution.s
 | Dimension | Segment | Tracks | Median days (first 180) | Reached 30+ days |
 |---|---|---|---|---|
 | Credits | Solo | 472 | 6 | 24% |
-| Credits | Collaboration | 106 | 4 | 23% |
-| Debut position | Debuted #1-10 | 113 | 15 | 34% |
-| Debut position | Debuted #11-25 | 154 | 5 | 14% |
-| Debut position | Debuted #26-50 | 311 | 4 | 25% |
+| Credits | Collaboration | 99 | 6 | 24% |
+| Debut position | Debuted #1-10 | 112 | 15 | 34% |
+| Debut position | Debuted #11-25 | 151 | 5 | 15% |
+| Debut position | Debuted #26-50 | 308 | 4 | 25% |
 | Launch shape | Climbed after debut | 205 | 31 | 52% |
-| Launch shape | Peaked on debut day | 373 | 3 | 8% |
+| Launch shape | Peaked on debut day | 366 | 3 | 8% |
 | Release age at debut | Released 1-12 months earlier | 45 | 21 | 47% |
 | Release age at debut | Released 1+ years earlier | 92 | 6.5 | 27% |
-| Release age at debut | Released <=30 days earlier | 441 | 5 | 21% |
+| Release age at debut | Released <=30 days earlier | 434 | 6 | 21% |
 
 | Comparison | Medians | Test | Effect size |
 |---|---|---|---|
 | Climbed after debut vs Peaked on debut day | 31 vs 3 days | Mann-Whitney U, p < 0.001 | 0.69 (large) |
-| Collaboration vs Solo | 4 vs 6 days | Mann-Whitney U, p = 0.46 | 0.05 (negligible) |
-| Debut position vs chart days | n = 578 | Spearman ρ = -0.17, p < 0.001 | weak |
+| Collaboration vs Solo | 6 vs 6 days | Mann-Whitney U, p = 0.96 | 0.00 (negligible) |
+| Debut position vs chart days | n = 571 | Spearman ρ = -0.17, p < 0.001 | weak |
 
 **Reading it.** Most new releases debut at their peak and then fall away, which fits a release-day burst of streams from existing fans. Tracks that *climb* after debuting are still gaining listeners, and they last about 10 times longer. Debut position is a much weaker predictor. The strongest single signal, launch shape, is only known after the first few days. That gives Phase 3's model a clear target: predict longevity from **early momentum** (position change over the first week), not from debut position alone.
 
@@ -68,7 +68,7 @@ SQL: [q3_segment_longevity.sql](../sql/analyses/q3_segment_longevity.sql)
 
 ## Q3. How quickly do tracks reach the chart after release?
 
-Among 643 non-catalogue tracks with exact release dates, the median gap from release to debut is **2 days**: 80% debut within a week and 18% within a day. Global chart success is decided almost immediately, which matches the debut-day peak pattern in Q2.
+Among 634 non-catalogue tracks with exact release dates, the median gap from release to debut is **2 days**: 80% debut within a week and 18% within a day. Global chart success is decided almost immediately, which matches the debut-day peak pattern in Q2.
 
 SQL: [q7_release_timing.sql](../sql/analyses/q7_release_timing.sql)
 
