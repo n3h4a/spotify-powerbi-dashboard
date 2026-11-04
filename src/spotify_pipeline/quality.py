@@ -175,6 +175,13 @@ CHECKS: tuple[Check, ...] = (
         _unique("gold.dim_track", "track_key"),
     ),
     Check(
+        "dim_track_label_unique",
+        "uniqueness",
+        "error",
+        "track_label (title · lead artist) is unique, so charts never merge two songs.",
+        _unique("gold.dim_track", "track_label"),
+    ),
+    Check(
         "dim_track_version_pk_unique",
         "uniqueness",
         "error",

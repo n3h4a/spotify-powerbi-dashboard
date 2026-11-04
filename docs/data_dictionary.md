@@ -38,6 +38,7 @@ Design rationale is in [data_model.md](data_model.md).
 | `track_key` | VARCHAR | PK. `md5('track|' + lower(title) + '|' + lower(lead_artist))`. |
 | `track_title` | VARCHAR | Song title as first seen. |
 | `lead_artist_name` | VARCHAR | First-credited artist. Stays the same when featured credits change. |
+| `track_label` | VARCHAR | `title · lead artist`: a unique display name (several songs share a title). |
 | `lead_artist_key` | VARCHAR | FK → `dim_artist`. |
 | `first_chart_date` | DATE | First day the track appears in the dataset. |
 | `last_chart_date` | DATE | Last day the track appears in the dataset. |
