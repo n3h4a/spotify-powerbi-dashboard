@@ -131,3 +131,52 @@ def test_local_folder_path_works_for_file_contents():
     text = (MODEL / "tables" / "dim_date.tmdl").read_text(encoding="utf-8")
     assert "File.Contents(DataLocation & FileName)" in text
     assert "Web.Contents(DataLocation & FileName)" in text
+
+
+# ------------------------------------------------------------------ the ported original design
+
+
+def _visuals():
+    for f in REPORT.rglob("visual.json"):
+        yield f, json.loads(f.read_text(encoding="utf-8"))
+
+
+def test_report_references_only_model_tables():
+    from spotify_pipeline.powerbi_report import referenced_old_entities
+
+    assert referenced_old_entities(REPORT) <= set(powerbi.MODEL_TABLES)
+
+
+def test_navigation_buttons_point_to_existing_pages():
+    pages = {p.name for p in (REPORT / "pages").iterdir() if p.is_dir()}
+    targets = []
+    for _, v in _visuals():
+        if v["visual"]["visualType"] == "actionButton":
+            link = json.dumps(v["visual"].get("visualContainerObjects", {}).get("visualLink", []))
+            targets += re.findall(r"'([0-9a-f]{20})'", link)
+    assert targets and set(targets) <= pages
+
+
+def test_every_referenced_image_is_packaged():
+    resources = REPORT.parent / "StaticResources" / "RegisteredResources"
+    text = "".join(f.read_text(encoding="utf-8") for f in REPORT.rglob("*.json"))
+    images = set(re.findall(r'"ItemName": "([^"]+)"', text))
+    assert images, "the design's background and icon images are missing"
+    assert all((resources / name).exists() for name in images)
+
+
+def test_design_pages_keep_their_backgrounds():
+    with_background = [
+        p
+        for p in (REPORT / "pages").glob("*/page.json")
+        if "Group_" in p.read_text(encoding="utf-8")
+    ]
+    assert len(with_background) == 3  # Overview, Artists, Songs (Home uses an image visual)
+
+
+def test_base_theme_is_packaged():
+    report = json.loads((REPORT / "report.json").read_text(encoding="utf-8"))
+    name = report["themeCollection"]["baseTheme"]["name"]
+    assert (
+        REPORT.parent / "StaticResources" / "SharedResources" / "BaseThemes" / f"{name}.json"
+    ).exists()
