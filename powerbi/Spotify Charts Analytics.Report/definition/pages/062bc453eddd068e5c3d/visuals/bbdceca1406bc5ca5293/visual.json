@@ -27,8 +27,8 @@
                 }
               },
               "queryRef": "fact_chart_entry.Tracks Charting",
-              "nativeQueryRef": "Songs",
-              "displayName": "Songs"
+              "nativeQueryRef": "Total Songs",
+              "displayName": "Total Songs"
             }
           ]
         }
@@ -223,6 +223,13 @@
               "expr": {
                 "Literal": {
                   "Value": "0D"
+                }
+              }
+            },
+            "labelDisplayUnits": {
+              "expr": {
+                "Literal": {
+                  "Value": "1D"
                 }
               }
             }

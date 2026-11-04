@@ -163,15 +163,6 @@ table fact_chart_entry
 		displayFolder: Artists
 		lineageTag: 8912ad59-cc41-5fb0-af26-f0a963e4ed46
 
-	measure 'Top 5 Artist Days' =
-			VAR Rank =
-			    RANKX ( ALL ( dim_artist[artist_name] ), [Artist Weighted Chart Days], , DESC )
-			RETURN
-			    IF ( Rank <= 5, [Artist Weighted Chart Days] )
-		formatString: #,0
-		displayFolder: Artists
-		lineageTag: cc741de8-bb8b-5885-ad89-1d2b43c4d730
-
 	measure 'Artist Insight' =
 			VAR Artist = SELECTEDVALUE ( dim_artist[artist_name] )
 			RETURN

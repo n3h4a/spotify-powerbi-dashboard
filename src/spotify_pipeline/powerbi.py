@@ -369,17 +369,6 @@ MEASURES = [
     ),
     Measure(
         "fact_chart_entry",
-        "Top 5 Artist Days",
-        "VAR Rank =\n"
-        "    RANKX ( ALL ( dim_artist[artist_name] ), [Artist Weighted Chart Days], , DESC )\n"
-        "RETURN\n"
-        "    IF ( Rank <= 5, [Artist Weighted Chart Days] )",
-        "#,0",
-        "Artists",
-        "Weighted chart days, shown only for the top 5 artists.",
-    ),
-    Measure(
-        "fact_chart_entry",
         "Artist Insight",
         "VAR Artist = SELECTEDVALUE ( dim_artist[artist_name] )\n"
         "RETURN\n"
@@ -486,13 +475,16 @@ MEASURES = [
             "VAR FocusRank = MIN ( dim_track[chart_rank] )\n"
             "RETURN\n"
             "    CALCULATE (\n"
-            "        YEAR ( MIN ( mart_track_performance[release_date] ) ),\n"
+            '        FORMAT ( YEAR ( MIN ( mart_track_performance[release_date] ) ), "0" ),\n'
             "        dim_track[chart_rank] = FocusRank\n"
             "    )"
         ),
-        "0",
+        "",
         "Song",
-        "Release year. For the selected song, or the top-ranked song in the current selection.",
+        (
+            "Release year (as text, so cards show 2024, not 2K). "
+            "For the selected song, or the top-ranked song in the current selection."
+        ),
     ),
     Measure(
         "mart_track_performance",

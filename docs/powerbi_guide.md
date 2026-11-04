@@ -69,7 +69,7 @@ Design choices:
 
 ### Measures
 
-38 DAX measures in display folders (Chart, Movement, Artists, Point in time, Track life,
+40 DAX measures in display folders (Chart, Movement, Artists, Point in time, Track life,
 Chart health). All are listed with descriptions in
 [`powerbi/measures.dax`](../powerbi/measures.dax). Highlights:
 

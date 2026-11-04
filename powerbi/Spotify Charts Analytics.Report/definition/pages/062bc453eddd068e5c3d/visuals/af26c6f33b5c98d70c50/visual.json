@@ -27,8 +27,8 @@
                 }
               },
               "queryRef": "fact_chart_entry.Explicit Share",
-              "nativeQueryRef": "Explicit share of chart",
-              "displayName": "Explicit share of chart"
+              "nativeQueryRef": "Explicit %",
+              "displayName": "Explicit %"
             }
           ]
         }
@@ -216,6 +216,13 @@
               "expr": {
                 "Literal": {
                   "Value": "'left'"
+                }
+              }
+            },
+            "labelDisplayUnits": {
+              "expr": {
+                "Literal": {
+                  "Value": "1D"
                 }
               }
             }

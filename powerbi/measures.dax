@@ -176,13 +176,6 @@ CALCULATE (
     CROSSFILTER ( bridge_track_artist[track_key], dim_track[track_key], BOTH )
 )
 
-// Weighted chart days, shown only for the top 5 artists.  [table: fact_chart_entry]
-Top 5 Artist Days =
-VAR Rank =
-    RANKX ( ALL ( dim_artist[artist_name] ), [Artist Weighted Chart Days], , DESC )
-RETURN
-    IF ( Rank <= 5, [Artist Weighted Chart Days] )
-
 // One-sentence summary of the selected artist.  [table: fact_chart_entry]
 Artist Insight =
 VAR Artist = SELECTEDVALUE ( dim_artist[artist_name] )
@@ -242,12 +235,12 @@ RETURN
         dim_track[chart_rank] = FocusRank
     )
 
-// Release year. For the selected song, or the top-ranked song in the current selection.  [table: mart_track_performance]
+// Release year (as text, so cards show 2024, not 2K). For the selected song, or the top-ranked song in the current selection.  [table: mart_track_performance]
 Release Year =
 VAR FocusRank = MIN ( dim_track[chart_rank] )
 RETURN
     CALCULATE (
-        YEAR ( MIN ( mart_track_performance[release_date] ) ),
+        FORMAT ( YEAR ( MIN ( mart_track_performance[release_date] ) ), "0" ),
         dim_track[chart_rank] = FocusRank
     )
 

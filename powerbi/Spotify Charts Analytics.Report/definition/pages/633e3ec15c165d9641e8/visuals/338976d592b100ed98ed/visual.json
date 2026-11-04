@@ -27,8 +27,8 @@
                 }
               },
               "queryRef": "fact_chart_entry.Artist Tracks",
-              "nativeQueryRef": "Songs",
-              "displayName": "Songs"
+              "nativeQueryRef": "Unique Songs",
+              "displayName": "Unique Songs"
             }
           ]
         }
@@ -36,6 +36,52 @@
     },
     "objects": {
       "value": [
+        {
+          "properties": {
+            "fontSize": {
+              "expr": {
+                "Literal": {
+                  "Value": "36D"
+                }
+              }
+            },
+            "fontColor": {
+              "solid": {
+                "color": {
+                  "expr": {
+                    "Literal": {
+                      "Value": "'#36A93F'"
+                    }
+                  }
+                }
+              }
+            },
+            "horizontalAlignment": {
+              "expr": {
+                "Literal": {
+                  "Value": "'center'"
+                }
+              }
+            },
+            "transparency": {
+              "expr": {
+                "Literal": {
+                  "Value": "0D"
+                }
+              }
+            },
+            "labelDisplayUnits": {
+              "expr": {
+                "Literal": {
+                  "Value": "1D"
+                }
+              }
+            }
+          },
+          "selector": {
+            "id": "default"
+          }
+        },
         {
           "properties": {
             "show": {

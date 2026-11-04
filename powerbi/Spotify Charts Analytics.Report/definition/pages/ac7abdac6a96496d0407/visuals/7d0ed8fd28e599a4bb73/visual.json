@@ -23,21 +23,6 @@
                       "Entity": "mart_track_performance"
                     }
                   },
-                  "Property": "Song"
-                }
-              },
-              "queryRef": "mart_track_performance.Song",
-              "nativeQueryRef": "Song",
-              "displayName": "Song"
-            },
-            {
-              "field": {
-                "Measure": {
-                  "Expression": {
-                    "SourceRef": {
-                      "Entity": "mart_track_performance"
-                    }
-                  },
                   "Property": "Release Year"
                 }
               },
@@ -74,6 +59,21 @@
               "queryRef": "fact_chart_entry.Song Days at #1",
               "nativeQueryRef": "Days at #1",
               "displayName": "Days at #1"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "mart_track_performance"
+                    }
+                  },
+                  "Property": "Song"
+                }
+              },
+              "queryRef": "mart_track_performance.Song",
+              "nativeQueryRef": "Song",
+              "displayName": "Song"
             }
           ]
         }
@@ -397,6 +397,13 @@
                   "Value": "'center'"
                 }
               }
+            },
+            "labelDisplayUnits": {
+              "expr": {
+                "Literal": {
+                  "Value": "1D"
+                }
+              }
             }
           },
           "selector": {
@@ -414,7 +421,7 @@
             }
           },
           "selector": {
-            "metadata": "mart_track_performance.Song"
+            "metadata": "mart_track_performance.Release Year"
           }
         }
       ],

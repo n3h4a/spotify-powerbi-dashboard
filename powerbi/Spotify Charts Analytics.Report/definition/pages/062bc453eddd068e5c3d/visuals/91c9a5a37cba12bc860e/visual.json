@@ -42,10 +42,10 @@
                       "Entity": "fact_chart_entry"
                     }
                   },
-                  "Property": "Top 5 Artist Days"
+                  "Property": "Artist Weighted Chart Days"
                 }
               },
-              "queryRef": "fact_chart_entry.Top 5 Artist Days",
+              "queryRef": "fact_chart_entry.Artist Weighted Chart Days",
               "nativeQueryRef": "Chart days (collabs split)",
               "displayName": "Chart days (collabs split)"
             }
@@ -62,7 +62,7 @@
                     "Entity": "fact_chart_entry"
                   }
                 },
-                "Property": "Top 5 Artist Days"
+                "Property": "Artist Weighted Chart Days"
               }
             },
             "direction": "Descending"
@@ -219,130 +219,6 @@
                 }
               }
             }
-          }
-        },
-        {
-          "properties": {
-            "fill": {
-              "solid": {
-                "color": {
-                  "expr": {
-                    "Literal": {
-                      "Value": "'#FFFFFF'"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "selector": {
-            "data": [
-              {
-                "scopeId": {
-                  "Comparison": {
-                    "ComparisonKind": 0,
-                    "Left": {
-                      "Column": {
-                        "Expression": {
-                          "SourceRef": {
-                            "Entity": "dim_track_version"
-                          }
-                        },
-                        "Property": "album_type"
-                      }
-                    },
-                    "Right": {
-                      "Literal": {
-                        "Value": "'album'"
-                      }
-                    }
-                  }
-                }
-              }
-            ]
-          }
-        },
-        {
-          "properties": {
-            "fill": {
-              "solid": {
-                "color": {
-                  "expr": {
-                    "Literal": {
-                      "Value": "'#33DE52'"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "selector": {
-            "data": [
-              {
-                "scopeId": {
-                  "Comparison": {
-                    "ComparisonKind": 0,
-                    "Left": {
-                      "Column": {
-                        "Expression": {
-                          "SourceRef": {
-                            "Entity": "dim_track_version"
-                          }
-                        },
-                        "Property": "album_type"
-                      }
-                    },
-                    "Right": {
-                      "Literal": {
-                        "Value": "'single'"
-                      }
-                    }
-                  }
-                }
-              }
-            ]
-          }
-        },
-        {
-          "properties": {
-            "fill": {
-              "solid": {
-                "color": {
-                  "expr": {
-                    "ThemeDataColor": {
-                      "ColorId": 1,
-                      "Percent": 0
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "selector": {
-            "data": [
-              {
-                "scopeId": {
-                  "Comparison": {
-                    "ComparisonKind": 0,
-                    "Left": {
-                      "Column": {
-                        "Expression": {
-                          "SourceRef": {
-                            "Entity": "dim_track_version"
-                          }
-                        },
-                        "Property": "album_type"
-                      }
-                    },
-                    "Right": {
-                      "Literal": {
-                        "Value": "'compilation'"
-                      }
-                    }
-                  }
-                }
-              }
-            ]
           }
         },
         {
@@ -661,5 +537,111 @@
       ]
     },
     "drillFilterOtherVisuals": true
+  },
+  "filterConfig": {
+    "filters": [
+      {
+        "name": "top5_91c9a5a37cba12bc860e",
+        "field": {
+          "Column": {
+            "Expression": {
+              "SourceRef": {
+                "Entity": "dim_artist"
+              }
+            },
+            "Property": "artist_name"
+          }
+        },
+        "type": "TopN",
+        "filter": {
+          "Version": 2,
+          "From": [
+            {
+              "Name": "subquery",
+              "Expression": {
+                "Subquery": {
+                  "Query": {
+                    "Version": 2,
+                    "From": [
+                      {
+                        "Name": "c",
+                        "Entity": "dim_artist",
+                        "Type": 0
+                      },
+                      {
+                        "Name": "m",
+                        "Entity": "fact_chart_entry",
+                        "Type": 0
+                      }
+                    ],
+                    "Select": [
+                      {
+                        "Column": {
+                          "Expression": {
+                            "SourceRef": {
+                              "Source": "c"
+                            }
+                          },
+                          "Property": "artist_name"
+                        },
+                        "Name": "field"
+                      }
+                    ],
+                    "OrderBy": [
+                      {
+                        "Direction": 2,
+                        "Expression": {
+                          "Measure": {
+                            "Expression": {
+                              "SourceRef": {
+                                "Source": "m"
+                              }
+                            },
+                            "Property": "Artist Weighted Chart Days"
+                          }
+                        }
+                      }
+                    ],
+                    "Top": 5
+                  }
+                }
+              },
+              "Type": 2
+            },
+            {
+              "Name": "c",
+              "Entity": "dim_artist",
+              "Type": 0
+            }
+          ],
+          "Where": [
+            {
+              "Condition": {
+                "In": {
+                  "Expressions": [
+                    {
+                      "Column": {
+                        "Expression": {
+                          "SourceRef": {
+                            "Source": "c"
+                          }
+                        },
+                        "Property": "artist_name"
+                      }
+                    }
+                  ],
+                  "Table": {
+                    "SourceRef": {
+                      "Source": "subquery"
+                    }
+                  }
+                }
+              }
+            }
+          ]
+        },
+        "howCreated": "User"
+      }
+    ]
   }
 }

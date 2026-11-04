@@ -241,3 +241,49 @@ def test_songs_are_identified_by_the_unique_ranked_label():
     assert not [f for f in fields if f[2] == "dim_track" and f[3] == "track_title"]
     tmdl = (MODEL / "tables" / "dim_track.tmdl").read_text(encoding="utf-8")
     assert "sortByColumn: chart_rank" in tmdl
+
+
+# ------------------------------------------------------------------ regressions found in review
+
+
+def test_cards_show_full_numbers():
+    """Auto display units turned 2024 into "2K" and 1,871 into "2K"."""
+    for _, v in _visuals():
+        if v["visual"]["visualType"] != "cardVisual":
+            continue
+        default = [
+            e
+            for e in v["visual"]["objects"]["value"]
+            if e.get("selector", {}).get("id") == "default"
+        ]
+        assert default[0]["properties"]["labelDisplayUnits"]["expr"]["Literal"]["Value"] == "1D"
+
+
+def test_conditional_colours_are_complete_or_solid():
+    """A colour rule without its input field renders text in an unreadable default colour."""
+    for f, v in _visuals():
+        text = json.dumps(v)
+        for m in re.finditer(r'\{"FillRule": \{', text):
+            assert '"Input"' in text[m.start() : m.start() + 400], f.parent.name
+
+
+def test_card_labels_fit():
+    """Long labels were truncated ("Explicit share of..."); keep them card-sized."""
+    for _, v in _visuals():
+        if v["visual"]["visualType"] != "cardVisual":
+            continue
+        width = v["position"]["width"]
+        for state in v["visual"]["query"]["queryState"].values():
+            for p in state["projections"]:
+                label = p.get("displayName", "")
+                assert len(label) * 7.5 <= width, (label, width)
+
+
+def test_top5_uses_a_real_top_n_filter():
+    combo = [
+        v for _, v in _visuals() if v["visual"]["visualType"] == "lineClusteredColumnComboChart"
+    ]
+    assert len(combo) == 1
+    [flt] = combo[0]["filterConfig"]["filters"]
+    assert flt["type"] == "TopN"
+    assert '"Top": 5' in json.dumps(flt)

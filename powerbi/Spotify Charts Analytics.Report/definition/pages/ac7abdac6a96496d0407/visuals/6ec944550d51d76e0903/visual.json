@@ -27,8 +27,8 @@
                 }
               },
               "queryRef": "mart_track_performance.Debut Position",
-              "nativeQueryRef": "First Position (in data)",
-              "displayName": "First Position (in data)"
+              "nativeQueryRef": "First Position",
+              "displayName": "First Position"
             }
           ]
         }
@@ -268,6 +268,13 @@
               "expr": {
                 "Literal": {
                   "Value": "'center'"
+                }
+              }
+            },
+            "labelDisplayUnits": {
+              "expr": {
+                "Literal": {
+                  "Value": "1D"
                 }
               }
             }

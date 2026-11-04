@@ -62,6 +62,7 @@ class Binding:
     title: str | None = None
     sort_desc: F | None = None
     drop: bool = False
+    top_n: tuple[F, str, int] | None = None  # (category, ranking measure, N)
     # A "player" shows the current song; it follows the page's selections but its own
     # clicks never filter other visuals.
     player: bool = False
@@ -98,14 +99,16 @@ BINDINGS: dict[tuple[str, str, int, int], Binding] = {
     ("Overview", "advancedSlicerVisual", 37, 115): Binding(SONG_LIST, "Browse Songs"),
     ("Overview", "advancedSlicerVisual", 541, 110): player(),
     ("Overview", "advancedSlicerVisual", 1081, 341): Binding({}, drop=True),  # month/qtr toggle
-    ("Overview", "cardVisual", 408, 114): Binding({"Data": [meas("Tracks Charting", "Songs")]}),
+    ("Overview", "cardVisual", 408, 114): Binding(
+        {"Data": [meas("Tracks Charting", "Total Songs")]}
+    ),
     ("Overview", "cardVisual", 408, 184): Binding(
-        {"Data": [meas("Avg Popularity", "Avg popularity (0-100)")]}
+        {"Data": [meas("Avg Popularity", "Avg Popularity")]}
     ),
-    ("Overview", "cardVisual", 408, 254): Binding({"Data": [meas("Artists Charting", "Artists")]}),
-    ("Overview", "cardVisual", 401, 331): Binding(
-        {"Data": [meas("Explicit Share", "Explicit share of chart")]}
+    ("Overview", "cardVisual", 408, 254): Binding(
+        {"Data": [meas("Artists Charting", "Unique Artists")]}
     ),
+    ("Overview", "cardVisual", 401, 331): Binding({"Data": [meas("Explicit Share", "Explicit %")]}),
     ("Overview", "gauge", 816, 118): Binding(
         {"Y": [meas("Avg Popularity")], "MaxValue": [meas("Popularity Max")]},
         "Average Popularity Score",
@@ -120,10 +123,11 @@ BINDINGS: dict[tuple[str, str, int, int], Binding] = {
     ("Overview", "lineClusteredColumnComboChart", 812, 225): Binding(
         {
             "Category": [col("dim_artist", "artist_name", "Artist")],
-            "Y": [meas("Top 5 Artist Days", "Chart days (collabs split)")],
+            "Y": [meas("Artist Weighted Chart Days", "Chart days (collabs split)")],
         },
         "Top 5 Artists",
-        sort_desc=meas("Top 5 Artist Days"),
+        sort_desc=meas("Artist Weighted Chart Days"),
+        top_n=(col("dim_artist", "artist_name"), "Artist Weighted Chart Days", 5),
     ),
     ("Overview", "barChart", 1044, 227): Binding(
         {
@@ -166,7 +170,7 @@ BINDINGS: dict[tuple[str, str, int, int], Binding] = {
         "Browse Artists",
         sort_desc=meas("Artist Share of Chart"),
     ),
-    ("Artist", "cardVisual", 300, 122): Binding({"Data": [meas("Artist Tracks", "Songs")]}),
+    ("Artist", "cardVisual", 300, 122): Binding({"Data": [meas("Artist Tracks", "Unique Songs")]}),
     ("Artist", "cardVisual", 540, 123): Binding(
         {"Data": [meas("Artist Avg Popularity", "Avg Popularity")]}
     ),
@@ -178,10 +182,10 @@ BINDINGS: dict[tuple[str, str, int, int], Binding] = {
     ("Artist", "cardVisual", 311, 422): Binding(
         {
             "Data": [
-                meas("Top Track", "Longest-charting song"),
-                meas("Artist Share of Chart", "Share of the chart"),
-                meas("Artist Weighted Chart Days", "Chart days (collabs split)"),
-                meas("Artist Best Position", "Best position"),
+                meas("Top Track", "Top Song"),
+                meas("Artist Best Position", "Best Position"),
+                meas("Artist Weighted Chart Days", "Chart Days"),
+                meas("Artist Share of Chart", "Chart Share"),
             ]
         }
     ),
@@ -197,7 +201,7 @@ BINDINGS: dict[tuple[str, str, int, int], Binding] = {
     ),
     ("Songs", "cardVisual", 537, 112): Binding({"Data": [meas("Peak Position", "Peak Position")]}),
     ("Songs", "cardVisual", 778, 113): Binding(
-        {"Data": [meas("Debut Position", "First Position (in data)")]}
+        {"Data": [meas("Debut Position", "First Position")]}
     ),
     ("Songs", "advancedSlicerVisual", 1013, 112): player(),
     ("Songs", "tableEx", 36, 119): Binding(
@@ -214,10 +218,10 @@ BINDINGS: dict[tuple[str, str, int, int], Binding] = {
     ("Songs", "cardVisual", 281, 417): Binding(
         {
             "Data": [
-                meas("Song", "Song"),
                 meas("Release Year", "Release Year"),
                 meas("Explicit Label", "Explicit"),
                 meas("Song Days at #1", "Days at #1"),
+                meas("Song", "Song"),
             ]
         }
     ),
@@ -288,9 +292,48 @@ def _query_ref(f: F, measures: dict[str, str]) -> str:
     return f"{measures[f.measure]}.{f.measure}" if f.measure else f"{f.table}.{f.column}"
 
 
-def _remap_entities(node, model_tables: set[str]):
-    """Rewrite old field references; return None for entries that can't be mapped."""
+class _Unmappable(Exception):
+    """A formatting value refers to a field that does not exist in the new model."""
+
+
+# Every change the port makes to the original formatting, for review (see port_log()).
+PORT_LOG: list[str] = []
+
+
+def port_log() -> list[str]:
+    return list(PORT_LOG)
+
+
+def _max_color(fill_rule: dict) -> dict | None:
+    """The top colour of a conditional colour rule, e.g. the green of white->green."""
+    for gradient in ("linearGradient3", "linearGradient2"):
+        grad = fill_rule.get(gradient)
+        if grad and "max" in grad:
+            return grad["max"].get("color")
+    return None
+
+
+def _remap(node, model_tables: set[str], where: str):
+    """Rewrite old field references to the new model.
+
+    Formatting is kept whenever possible:
+      * a conditional colour rule driven by an old measure becomes a solid colour (the
+        rule's top colour), so the number keeps its look
+      * otherwise only the single property that refers to a missing field is dropped,
+        never the whole formatting block
+    """
     if isinstance(node, dict):
+        # A conditional colour is {"FillRule": {"Input": <field>, "FillRule": <gradient>}}.
+        rule = node.get("FillRule")
+        if len(node) == 1 and isinstance(rule, dict) and "Input" in rule:
+            try:
+                return {"FillRule": _remap(rule, model_tables, where)}
+            except _Unmappable:
+                color = _max_color(node["FillRule"].get("FillRule", {}))
+                if color is None:
+                    raise
+                PORT_LOG.append(f"{where}: conditional colour on an old field -> solid colour")
+                return color
         if "Property" in node and isinstance(node.get("Expression"), dict):
             src = node["Expression"].get("SourceRef", {})
             if "Entity" in src:
@@ -303,22 +346,69 @@ def _remap_entities(node, model_tables: set[str]):
                         "Property": column,
                     }
                 if src["Entity"] not in model_tables:
-                    return None
+                    raise _Unmappable(f"{src['Entity']}.{node['Property']}")
         out = {}
         for k, v in node.items():
-            new = _remap_entities(v, model_tables)
-            if new is None:
-                return None
-            out[k] = new
+            if k == "properties" and isinstance(v, dict):
+                props = {}
+                for name, value in v.items():
+                    try:
+                        props[name] = _remap(value, model_tables, where)
+                    except _Unmappable as e:
+                        PORT_LOG.append(f"{where}: dropped property '{name}' (refers to {e})")
+                out[k] = props
+            else:
+                out[k] = _remap(v, model_tables, where)
         return out
     if isinstance(node, list):
         kept = []
         for item in node:
-            new = _remap_entities(item, model_tables)
-            if new is not None:
-                kept.append(new)
+            try:
+                kept.append(_remap(item, model_tables, where))
+            except _Unmappable as e:
+                PORT_LOG.append(f"{where}: dropped a formatting rule (refers to {e})")
         return kept
     return node
+
+
+def _remap_entities(node, model_tables: set[str], where: str = "?"):
+    try:
+        return _remap(node, model_tables, where)
+    except _Unmappable as e:
+        PORT_LOG.append(f"{where}: dropped (refers to {e})")
+        return None
+
+
+def _scope_columns(entry: dict) -> set[tuple[str, str]]:
+    found = set()
+    for m in re.finditer(
+        r'"Entity": "([^"]+)"\}\}, "Property": "([^"]+)"',
+        json.dumps(entry.get("selector", {}).get("data", [])),
+    ):
+        found.add((m.group(1), m.group(2)))
+    return found
+
+
+def _prune_scopes(objects: dict, bound: set[tuple[str, str]], where: str) -> dict:
+    """Drop per-category formatting for fields the visual no longer shows.
+
+    The original visuals had colours keyed to album type or an auto-date Year that are
+    not part of the new visuals; Power BI can fail on such stale rules.
+    """
+    out = {}
+    for group, entries in objects.items():
+        kept = []
+        for entry in entries:
+            cols = _scope_columns(entry) if isinstance(entry, dict) else set()
+            if cols and not cols <= bound:
+                PORT_LOG.append(
+                    f"{where}: dropped {group} rule for fields not in the visual "
+                    f"{sorted(c[1] for c in cols - bound)}"
+                )
+                continue
+            kept.append(entry)
+        out[group] = kept
+    return out
 
 
 def _remap_metadata(node, mapping: dict[str, str], fallback: str | None):
@@ -365,8 +455,9 @@ def _build_visual(
 ) -> dict:
     cfg = v.container["config"]
     sv = cfg.get("singleVisual", {})
-    objects = _remap_entities(sv.get("objects", {}), model_tables) or {}
-    vc_objects = _remap_entities(sv.get("vcObjects", {}), model_tables) or {}
+    where = f"{v.page} {v.visual_type} ({v.x:.0f},{v.y:.0f})"
+    objects = _remap_entities(sv.get("objects", {}), model_tables, where) or {}
+    vc_objects = _remap_entities(sv.get("vcObjects", {}), model_tables, where) or {}
 
     visual: dict = {"visualType": visual_type or v.visual_type}
     if binding is not None and binding.roles:
@@ -391,6 +482,8 @@ def _build_visual(
         fallback = all_refs[0] if len(all_refs) == 1 else None
         objects = _remap_metadata(objects, mapping, fallback)
         vc_objects = _remap_metadata(vc_objects, mapping, fallback)
+        bound = {(f.table, f.column) for fs in binding.roles.values() for f in fs if f.column}
+        objects = _prune_scopes(objects, bound, where)
         query: dict = {"queryState": query_state}
         if binding.sort_desc is not None:
             query["sortDefinition"] = {
@@ -400,8 +493,12 @@ def _build_visual(
                 "isDefaultSort": False,
             }
         visual["query"] = query
+        if binding.top_n is not None:
+            visual_filter = _top_n_filter(binding, measures, v.container["config"]["name"])
         if binding.title:
             vc_objects = _set_title(vc_objects, binding.title)
+    if visual["visualType"] == "cardVisual":
+        objects = _full_numbers(objects)
     if _clean(objects):
         visual["objects"] = _clean(objects)
     if _clean(vc_objects):
@@ -409,12 +506,104 @@ def _build_visual(
     visual["drillFilterOtherVisuals"] = True
 
     pos = position or _position(v.container)
-    return {
+    out = {
         "$schema": f"{SCHEMA}/item/report/definition/visualContainer/{VERSIONS['visual']}"
         "/schema.json",
         "name": name or cfg["name"],
         "position": pos,
         "visual": visual,
+    }
+    if binding is not None and binding.top_n is not None:
+        out["filterConfig"] = {"filters": [visual_filter]}
+    return out
+
+
+def _full_numbers(objects: dict) -> dict:
+    """Cards show full numbers (display units: None), so 1,871 never becomes "2K".
+
+    Uses the original dashboard's own setting (labelDisplayUnits = 1) on the default
+    selector, so it applies to every field of the card.
+    """
+    objects = copy.deepcopy(objects)
+    entries = objects.setdefault("value", [])
+    default = next((e for e in entries if e.get("selector", {}).get("id") == "default"), None)
+    if default is None:
+        default = {"properties": {}, "selector": {"id": "default"}}
+        entries.insert(0, default)
+    default.setdefault("properties", {})["labelDisplayUnits"] = {
+        "expr": {"Literal": {"Value": "1D"}}
+    }
+    return objects
+
+
+def _top_n_filter(binding: Binding, measures: dict[str, str], visual_name: str) -> dict:
+    """A visual-level Top N filter, as Power BI's own "Top N" filter type."""
+    category, measure, n = binding.top_n
+    by_table = measures[measure]
+    return {
+        "name": f"top{n}_{visual_name}"[:50],
+        "field": _field_expr(category, measures),
+        "type": "TopN",
+        "filter": {
+            "Version": 2,
+            "From": [
+                {
+                    "Name": "subquery",
+                    "Expression": {
+                        "Subquery": {
+                            "Query": {
+                                "Version": 2,
+                                "From": [
+                                    {"Name": "c", "Entity": category.table, "Type": 0},
+                                    {"Name": "m", "Entity": by_table, "Type": 0},
+                                ],
+                                "Select": [
+                                    {
+                                        "Column": {
+                                            "Expression": {"SourceRef": {"Source": "c"}},
+                                            "Property": category.column,
+                                        },
+                                        "Name": "field",
+                                    }
+                                ],
+                                "OrderBy": [
+                                    {
+                                        "Direction": 2,
+                                        "Expression": {
+                                            "Measure": {
+                                                "Expression": {"SourceRef": {"Source": "m"}},
+                                                "Property": measure,
+                                            }
+                                        },
+                                    }
+                                ],
+                                "Top": n,
+                            }
+                        }
+                    },
+                    "Type": 2,
+                },
+                {"Name": "c", "Entity": category.table, "Type": 0},
+            ],
+            "Where": [
+                {
+                    "Condition": {
+                        "In": {
+                            "Expressions": [
+                                {
+                                    "Column": {
+                                        "Expression": {"SourceRef": {"Source": "c"}},
+                                        "Property": category.column,
+                                    }
+                                }
+                            ],
+                            "Table": {"SourceRef": {"Source": "subquery"}},
+                        }
+                    }
+                }
+            ],
+        },
+        "howCreated": "User",
     }
 
 
@@ -451,6 +640,7 @@ def build_report(
     project: str,
 ) -> None:
     """Write the PBIR report folder, re-creating the original design on the new model."""
+    PORT_LOG.clear()
     layout, resources = _load_layout(pbix)
     report_config = json.loads(layout["config"])
 
@@ -529,7 +719,7 @@ def build_report(
             "height": section["height"],
             "width": section["width"],
         }
-        page_objects = _remap_entities(section_cfg.get("objects", {}), model_tables)
+        page_objects = _remap_entities(section_cfg.get("objects", {}), model_tables, f"{page} page")
         if page_objects:
             page_json["objects"] = page_objects
         data_visuals: list[str] = []  # names of visuals that show data

@@ -75,10 +75,9 @@ table mart_track_performance
 			VAR FocusRank = MIN ( dim_track[chart_rank] )
 			RETURN
 			    CALCULATE (
-			        YEAR ( MIN ( mart_track_performance[release_date] ) ),
+			        FORMAT ( YEAR ( MIN ( mart_track_performance[release_date] ) ), "0" ),
 			        dim_track[chart_rank] = FocusRank
 			    )
-		formatString: 0
 		displayFolder: Song
 		lineageTag: d8f88238-d4fb-505c-8006-6e8546184e29
 

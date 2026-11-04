@@ -27,38 +27,8 @@
                 }
               },
               "queryRef": "mart_track_performance.Top Track",
-              "nativeQueryRef": "Longest-charting song",
-              "displayName": "Longest-charting song"
-            },
-            {
-              "field": {
-                "Measure": {
-                  "Expression": {
-                    "SourceRef": {
-                      "Entity": "fact_chart_entry"
-                    }
-                  },
-                  "Property": "Artist Share of Chart"
-                }
-              },
-              "queryRef": "fact_chart_entry.Artist Share of Chart",
-              "nativeQueryRef": "Share of the chart",
-              "displayName": "Share of the chart"
-            },
-            {
-              "field": {
-                "Measure": {
-                  "Expression": {
-                    "SourceRef": {
-                      "Entity": "fact_chart_entry"
-                    }
-                  },
-                  "Property": "Artist Weighted Chart Days"
-                }
-              },
-              "queryRef": "fact_chart_entry.Artist Weighted Chart Days",
-              "nativeQueryRef": "Chart days (collabs split)",
-              "displayName": "Chart days (collabs split)"
+              "nativeQueryRef": "Top Song",
+              "displayName": "Top Song"
             },
             {
               "field": {
@@ -72,8 +42,38 @@
                 }
               },
               "queryRef": "fact_chart_entry.Artist Best Position",
-              "nativeQueryRef": "Best position",
-              "displayName": "Best position"
+              "nativeQueryRef": "Best Position",
+              "displayName": "Best Position"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fact_chart_entry"
+                    }
+                  },
+                  "Property": "Artist Weighted Chart Days"
+                }
+              },
+              "queryRef": "fact_chart_entry.Artist Weighted Chart Days",
+              "nativeQueryRef": "Chart Days",
+              "displayName": "Chart Days"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "fact_chart_entry"
+                    }
+                  },
+                  "Property": "Artist Share of Chart"
+                }
+              },
+              "queryRef": "fact_chart_entry.Artist Share of Chart",
+              "nativeQueryRef": "Chart Share",
+              "displayName": "Chart Share"
             }
           ]
         }
@@ -211,6 +211,13 @@
               "expr": {
                 "Literal": {
                   "Value": "'center'"
+                }
+              }
+            },
+            "labelDisplayUnits": {
+              "expr": {
+                "Literal": {
+                  "Value": "1D"
                 }
               }
             }
