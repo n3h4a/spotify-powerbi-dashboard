@@ -10,8 +10,8 @@
   <img src="https://img.shields.io/badge/DuckDB-SQL-FFF000?logo=duckdb&logoColor=black" alt="DuckDB"/>
   <img src="https://img.shields.io/badge/Power%20BI-Dashboard-F2C811?logo=powerbi&logoColor=black" alt="Power BI"/>
   <img src="https://img.shields.io/badge/scikit--learn-ML-F7931E?logo=scikitlearn&logoColor=white" alt="scikit-learn"/>
-  <img src="https://img.shields.io/badge/tests-77%20passing-0A9EDC?logo=pytest&logoColor=white" alt="pytest"/>
-  <img src="https://img.shields.io/badge/data%20quality-42%20checks-1DB954" alt="Data quality"/>
+  <img src="https://img.shields.io/badge/tests-81%20passing-0A9EDC?logo=pytest&logoColor=white" alt="pytest"/>
+  <img src="https://img.shields.io/badge/data%20quality-45%20checks-1DB954" alt="Data quality"/>
 </p>
 
 <img src="docs/figures/02_launch_segments.png" width="820" alt="Tracks that climb outlast tracks that peak on day one"/>
@@ -29,8 +29,8 @@
 | **Model** | Star schema: 1 fact, 4 dimensions (incl. a **Type 2 slowly changing dimension**), 1 bridge table, plus 3 analytics marts |
 | **Analysis** | 7 business questions answered in SQL, tested with **Mann-Whitney U** and **Spearman**, written up in a [generated insights report](docs/insights.md) |
 | **Data science** | **Survival analysis** (Kaplan-Meier, log-rank, landmark analysis, Cox model) and a **longevity classifier**: test **ROC-AUC 0.91** on a time-based holdout, documented in a [model report](docs/model_report.md) with a model card |
-| **Quality** | **42 automated data-quality checks**, run in CI, with a [generated report](docs/data_quality_report.md) |
-| **Testing** | 77 tests: unit, integration, corruption tests, a **future-data leakage test**, and a simulation that checks the statistical test is calibrated |
+| **Quality** | **45 automated data-quality checks**, run in CI, with a [generated report](docs/data_quality_report.md) |
+| **Testing** | 81 tests: unit, integration, corruption tests, a **future-data leakage test**, and a simulation that checks the statistical test is calibrated |
 | **BI** | **Power BI as code:** a generated Power BI Project (TMDL model + PBIR report, 38 DAX measures, 4 pages in the original Spotify design) that loads its data from this repo. [Guide](docs/powerbi_guide.md) |
 
 ---
@@ -41,11 +41,11 @@
 
 | # | Finding | Evidence |
 |---|---|---|
-| 1 | **Most hits are fleeting.** The median track charts for 6 days; 54% last a week or less. | The longest-charting 10% of tracks hold 58% of all chart slots |
-| 2 | **A day-one peak predicts a short life.** 65% of tracks peak on debut day and last a median 3 days. Tracks that climb after debut last 31. | Mann-Whitney U, p < 0.001, rank-biserial effect size 0.69 |
+| 1 | **Most hits are fleeting.** The median track charts for 6 days; 53% last a week or less. | The longest-charting 10% of tracks hold 57% of all chart slots |
+| 2 | **A day-one peak predicts a short life.** 64% of tracks peak on debut day and last a median 3 days. Tracks that climb after debut last 31. | Mann-Whitney U, p < 0.001, rank-biserial effect size 0.69 |
 | 3 | **Debut position is a poor predictor** of how long a track lasts. | Spearman ρ = −0.17 |
-| 4 | **Collaborations don't last longer** than solo tracks (median 4 vs 6 days). | p = 0.46, not significant |
-| 5 | **Slow burners win.** Tracks charting 1–12 months after release last 4x longer than brand-new releases. | Median 21 vs 5 days |
+| 4 | **Collaborations don't last longer** than solo tracks (median 6 vs 6 days). | p = 0.96, not significant |
+| 5 | **Slow burners win.** Tracks charting 1–12 months after release last 3.5x longer than brand-new releases. | Median 21 vs 6 days |
 | 6 | **Album drops take over the chart.** Taylor Swift held 30 of 50 slots on 21 Apr 2024. | Artist HHI 3,669 vs a median day of 309 |
 | 7 | **The Christmas cliff.** Holiday songs held 94% of the chart on 26 Dec and 4% two days later. | `mart_daily_chart.holiday_track_share` |
 
@@ -64,9 +64,9 @@
 
 | Model | Information used | Test ROC-AUC [95% CI] | Precision in top 20% |
 |---|---|---:|---:|
-| Debut position only | Debut position | 0.61 [0.52–0.69] | 40% |
-| Launch-day model | 12 features known at debut | 0.71 [0.62–0.78] | 50% |
-| **Week-one model** | **+ 7 features from the first week** | **0.91 [0.87–0.95]** | **82%** |
+| Debut position only | Debut position | 0.61 [0.53–0.69] | 41% |
+| Launch-day model | 12 features known at debut | 0.69 [0.61–0.77] | 51% |
+| **Week-one model** | **+ 7 features from the first week** | **0.91 [0.86–0.95]** | **82%** |
 
 - **Validated like production:** trained on 2023 debuts and tested on 2024 debuts. Features are point-in-time correct, with a test that rebuilds the warehouse with future data appended and asserts no feature changes. Model selection happens inside the training set only.
 - **Survival analysis instead of dropping unfinished cases:** tracks still charting when the data ends are *censored*. A landmark analysis at day 7 avoids immortal-time bias. Tracks that climbed in week one go on to chart a median **57 more days**, against **8** for those that didn't (log-rank p < 0.001).
@@ -96,7 +96,7 @@ flowchart LR
         B --> S --> G --> M
     end
 
-    DQ{{"38 data-quality checks<br/>block on error"}}
+    DQ{{"45 data-quality checks<br/>block on error"}}
     OUT[("Parquet / CSV<br/>exports")]
     PBI["📊 Power BI"]
     INS["📈 Insights report<br/>SQL + statistics + charts"]
@@ -129,7 +129,7 @@ make all       # build warehouse → run quality checks → export tables
 make insights  # run the analyses → docs/insights.md + docs/figures/
 make model     # survival analysis + classifier → docs/model_report.md
 make powerbi   # regenerate the Power BI project in powerbi/
-make test      # 77 tests
+make test      # 81 tests
 ```
 
 ```text
@@ -139,14 +139,14 @@ silver artist_credit_parts        487 rows    471 ms
 silver int_chart_entries        27800 rows     90 ms
 gold   dim_date                   731 rows     84 ms
 gold   dim_artist                 346 rows      9 ms
-gold   dim_track                  807 rows      6 ms
-gold   dim_track_version         1079 rows     34 ms
-gold   bridge_track_artist       1003 rows     12 ms
+gold   dim_track                  797 rows      6 ms
+gold   dim_track_version         1089 rows     34 ms
+gold   bridge_track_artist        986 rows     12 ms
 gold   fact_chart_entry         27800 rows     68 ms
-marts  mart_track_performance     807 rows     22 ms
+marts  mart_track_performance     797 rows     22 ms
 marts  mart_artist_performance    346 rows     17 ms
 marts  mart_daily_chart           556 rows     16 ms
-ml     track_features             757 rows     51 ms
+ml     track_features             747 rows     51 ms
 ```
 
 Query the warehouse directly with the DuckDB CLI or Python:
@@ -181,7 +181,7 @@ computed with SQL window functions: `previous_position`, `position_change`,
 ### Engineering decisions worth reading
 
 1. **Track identity without a track ID.** One recording's artist credit changes over time (`Drake & SZA` → `Drake`), so `(song, artist)` is the wrong key. Tracks are keyed on *(title, lead artist)*, and a uniqueness check confirms no two recordings collide.
-2. **SCD Type 2.** 16% of tracks change attributes while charting, typically when a single is re-released on an album. `dim_track_version` keeps every version with validity windows (gaps-and-islands SQL), so reports reflect what was true *on that day*.
+2. **SCD Type 2.** 18% of tracks change attributes while charting, typically when a single is re-released on an album. `dim_track_version` keeps every version with validity windows (gaps-and-islands SQL), so reports reflect what was true *on that day*.
 3. **Fair credit for collaborations.** A bridge table with `attribution_weight = 1/n` shares chart metrics between collaborators with no double counting. 18% of chart entries are collaborations.
 4. **Missing days don't distort the metrics.** Movement is measured against the previous *snapshot*, so the 4 missing source days don't show up as false drop-outs.
 5. **Deterministic keys.** Keys are hashed from natural keys, so rebuilds are idempotent (tested).
@@ -190,7 +190,7 @@ computed with SQL window functions: `previous_position`, `position_change`,
 
 ## ✅ Data quality
 
-Every run executes **42 checks** in 7 categories: completeness, validity, uniqueness,
+Every run executes **45 checks** in 7 categories: completeness, validity, uniqueness,
 referential integrity, business rules, reconciliation (marts and ML features) and source profiling. Any failed `error` check
 returns a non-zero exit code and turns CI red. The results go to
 **[docs/data_quality_report.md](docs/data_quality_report.md)**, and CI fails if the
@@ -205,7 +205,7 @@ committed report is out of date.
 | Artist credits **drift** for the same recording | Wrong track counts if keyed on the credit | Track = title + lead artist |
 | `" & "` joins collaborators **and** appears inside band names (*Earth, Wind & Fire*) | Naive splitting invents artists | Splitting with a configurable protected-names seed |
 | Release dates in 3 precisions (`2023-04-28`, `2019-05`, `1962`) | Misleading "days since release" | Normalised date + `release_date_precision` |
-| **19 tracks flip** between single and album releases from day to day | Noisy attributes | Faithfully versioned in SCD2; documented |
+| **21 tracks flip** between single and album releases from day to day | Noisy attributes | Faithfully versioned in SCD2; documented |
 
 ---
 

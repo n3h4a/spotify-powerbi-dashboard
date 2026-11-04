@@ -92,17 +92,45 @@ CSV:
 
 | Page | Visual | Before (raw CSV) | Now (star schema) |
 |---|---|---|---|
-| **Overview** | KPI cards | total tracks, popularity, artists (342, miscounted), explicit % | chart entries, popularity, **346** individually counted artists, explicit share (point in time) |
+| **Overview** | KPI cards | "total tracks" 27.8K (really chart rows), popularity, artists (342, miscounted), explicit % | **797 songs**, popularity, **345** individually counted artists, explicit share (point in time) |
 | | Top 5 Artists | raw song counts | **weighted** chart days (collaborations split fairly) |
-| | Area chart | popularity by quarter | **artist dominance (HHI) by month**: album drops |
+| | Area chart | popularity by quarter | popularity by month |
 | | Bottom left | songs by artist | songs by artist (credits split correctly) |
 | | Bottom middle | top songs by popularity | **longest chart runs** |
 | | Bottom right | duration vs popularity | **how long tracks last** (chart-life distribution) |
 | **Artists** | Browse table | artist strings incl. "A & B" | individual artists, songs, share of chart |
 | | Cards | songs, popularity, #1 hits | songs, popularity, days at #1 (via the bridge) |
 | | Summary card + insight | most popular song etc. | longest-charting song, share, weighted days, best position, and a generated one-sentence **artist insight** |
-| **Songs** | Cards | duration, popularity, best position | **days on chart, peak position, debut position** |
+| **Songs** | Cards | duration, popularity, best position | **days on chart, peak position, first position in the data** |
 | | Bottom chart | total tracks by artist | the song's **chart journey** over time |
+
+### How every page behaves
+
+Each number has exactly one meaning:
+
+| Page | With nothing selected | After you click |
+|---|---|---|
+| **Overview** | The whole chart | Everything filters to what you clicked (a song, an artist, a bar) |
+| **Artists** | All artists combined (797 songs, 556 days at #1) | That artist: songs, popularity, days at #1, top song, share of chart, and a one-sentence summary |
+| **Songs** | **One song:** the longest-charting hit (*I Wanna Be Yours*) | That song. The cards, chart journey and player all show the **same** song |
+
+- **Song lists are sorted by chart success** (the hidden `chart_rank`), so lists and the
+  album-cover player start with the biggest hit, not with whichever title sorts first
+  alphabetically.
+- **The green player is a display:** it shows the current song and follows your clicks,
+  but clicking it never filters anything.
+- **Clicks filter; they don't cross-highlight.** Every visual-to-visual interaction is
+  set explicitly to *filter*, so numbers never appear half-dimmed.
+
+### Numbers to check on screen
+
+| Where | Click | Expected |
+|---|---|---|
+| Overview cards | nothing | 797 songs · 89.6 avg popularity · 345 artists · 40.2% explicit |
+| Overview → Top 5 Artists | nothing | Taylor Swift 1,871 · Billie Eilish 903 · The Weeknd 842 · Sabrina Carpenter 736 · Bad Bunny 631 |
+| Artists page | Sabrina Carpenter | 14 songs · 90.9 popularity · 51 days at #1 · top song *Espresso* · 2.6% of the chart · best position 1 |
+| Songs page | nothing | *I Wanna Be Yours*: 548 days · peak 11 · first position 25 · released 2013 · 0 days at #1 |
+| Songs page | *Espresso* | 226 days · peak 1 · first position 17 · released 2024 · explicit · 31 days at #1 |
 
 The Browse Songs list and the green "player" on every page show album covers from the
 model. The month/quarter toggle was dropped, since its field parameter belonged to the old model.
@@ -114,11 +142,11 @@ These must match the warehouse exactly:
 | Measure (no filters) | Expected |
 |---|---|
 | `Chart Entries` | 27,800 |
-| `Tracks Charting` | 807 |
+| `Tracks Charting` | 797 |
 | `Snapshots` | 556 |
 | `Artist Weighted Chart Days` (total) | 27,800 |
 | `Artist Weighted Chart Days` for Taylor Swift | 1,871 |
-| `Median Chart Life (days)` | 7 (all 807 tracks); 6 with `is_left_censored` = false |
+| `Median Chart Life (days)` | 7 (all 797 tracks); 6 with `is_left_censored` = false |
 
 ## 4. Editing the report
 
