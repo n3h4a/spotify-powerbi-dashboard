@@ -16,6 +16,7 @@ Every number in docs/model_report.md is produced here.
 
 from __future__ import annotations
 
+import json
 import logging
 from dataclasses import dataclass
 from datetime import date
@@ -503,6 +504,7 @@ def generate(
     report: Path,
     n_bootstrap: int = N_BOOTSTRAP,
     n_repeats: int = 50,
+    site_json: Path | None = None,
 ) -> None:
     from sklearn.inspection import permutation_importance
 
@@ -834,3 +836,72 @@ def generate(
     report.parent.mkdir(parents=True, exist_ok=True)
     report.write_text("\n".join(md) + "\n", encoding="utf-8")
     log.info("Model report written to %s", report)
+
+    if site_json is not None:
+        ranks = dict(con.execute("SELECT track_key, chart_rank FROM gold.dim_track").fetchall())
+        summary = {
+            "subtitle": (
+                f"Trained on {len(train)} songs that debuted in 2023, tested on {len(test)} "
+                "that debuted in 2024. Features use only what is known one week after debut. "
+                "Full method: docs/model_report.md."
+            ),
+            "kpis": [
+                {
+                    "label": "Week-one model AUC",
+                    "value": f"{week1.test_auc:.2f}",
+                    "note": f"95% CI {week1.test_auc_ci[0]:.2f}–{week1.test_auc_ci[1]:.2f}",
+                },
+                {
+                    "label": "Launch-day model AUC",
+                    "value": f"{launch.test_auc:.2f}",
+                    "note": "only what is known on debut day",
+                },
+                {
+                    "label": "Hit rate in top 20%",
+                    "value": pct(week1.top20_precision),
+                    "note": f"vs {pct(y_test.mean())} base rate",
+                },
+                {
+                    "label": "Climbers' remaining life",
+                    "value": f"{by_momentum[0].median:.0f} days",
+                    "note": f"vs {by_momentum[1].median:.0f} for non-climbers",
+                },
+            ],
+            "watchlist": [
+                {
+                    "song": r.track_title,
+                    "artist": r.lead_artist_name,
+                    "track": ranks[r.track_key] - 1,  # index in the dashboard's track list
+                    "debut": f"{r.debut_date:%Y-%m-%d}",
+                    "debut_pos": int(r.debut_position),
+                    "day7": int(r.w1_day7_position),
+                    "p": round(float(r.p_lasts_30), 4),
+                    "days": int(r.chart_life_days),
+                }
+                for r in watchlist.itertuples()
+            ],
+            "figures": [
+                {
+                    "title": "Prediction accuracy",
+                    "sub": "ROC curves on the 2024 test set",
+                    "src": "figures/09_roc_curves.png",
+                },
+                {
+                    "title": "What drives the prediction",
+                    "sub": "Permutation importance",
+                    "src": "figures/10_feature_importance.png",
+                },
+                {
+                    "title": "Week-one momentum",
+                    "sub": "Landmark survival analysis at day 7",
+                    "src": "figures/07_landmark_week_one.png",
+                },
+                {
+                    "title": "Chart survival by debut position",
+                    "sub": "Kaplan-Meier",
+                    "src": "figures/06_km_debut_position.png",
+                },
+            ],
+        }
+        site_json.parent.mkdir(parents=True, exist_ok=True)
+        site_json.write_text(json.dumps(summary, indent=1, ensure_ascii=False), encoding="utf-8")

@@ -21,10 +21,11 @@ def _parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "command",
-        choices=["build", "check", "export", "insights", "model", "powerbi", "all"],
+        choices=["build", "check", "export", "insights", "model", "powerbi", "web", "all"],
         help="build: run the ELT | check: data-quality suite | export: gold tables to files | "
         "insights: analyses, charts and docs/insights.md | model: survival analysis and "
         "prediction, docs/model_report.md | powerbi: generate the Power BI project | "
+        "web: export data for the web dashboard (site/) | "
         "all: build + check + export",
     )
     parser.add_argument("--raw", type=Path, help="Source CSV (default: dataset/...csv)")
@@ -78,18 +79,31 @@ def main(argv: list[str] | None = None) -> int:
         if args.command == "insights":
             from spotify_pipeline import insights  # optional deps: pip install -e ".[analysis]"
 
-            insights.generate(con, settings.sql_dir, settings.insights_report)
+            insights.generate(
+                con,
+                settings.sql_dir,
+                settings.insights_report,
+                settings.site_dir / "data" / "insights.json",
+            )
 
         if args.command == "model":
             from spotify_pipeline import modeling  # optional deps: pip install -e ".[ml]"
 
-            modeling.generate(con, settings.model_report)
+            modeling.generate(
+                con, settings.model_report, site_json=settings.site_dir / "data" / "model.json"
+            )
 
         if args.command == "powerbi":
             from spotify_pipeline import powerbi
 
             powerbi.generate(con, settings.powerbi_dir)
             log.info("Power BI project written to %s", settings.powerbi_dir)
+
+        if args.command == "web":
+            from spotify_pipeline import web
+
+            path = web.export(con, settings.site_dir, settings.insights_report.parent / "figures")
+            log.info("Web dashboard data written to %s", path)
     finally:
         con.close()
     return 0

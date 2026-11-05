@@ -20,3 +20,6 @@ Thumbs.db
 # Power BI Desktop local files (PBIP)
 **/.pbi/localSettings.json
 **/.pbi/cache.abf
+
+# Web dashboard dev dependencies
+site/node_modules/

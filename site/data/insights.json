@@ -1,0 +1,54 @@
+{
+ "subtitle": "Seven business questions answered from 556 daily charts, with the statistics behind each answer. Full method: docs/insights.md.",
+ "questions": [
+  {
+   "question": "How long do songs survive on the Global Top 50?",
+   "headline": "6 days",
+   "answer": "That is the median chart life. 53% of songs last a week or less, and the longest-charting 10% of songs hold 57% of all chart slots: the chart is a few long runs and many brief visits.",
+   "evidence": "747 songs with a known debut · q1_longevity_distribution.sql",
+   "figure": "figures/01_longevity.png"
+  },
+  {
+   "question": "Does a big debut mean a long run?",
+   "headline": "10x longer",
+   "answer": "Songs that keep climbing after their debut chart a median 31 days in their first 180, against 3 for songs that peak on day one (64% of songs). Debut position itself is a weak predictor (Spearman ρ = -0.17), and collaborations last no longer than solo songs (6 vs 6 days, p = 0.96).",
+   "evidence": "Mann-Whitney U p < 0.001, effect size 0.69 · 571 songs with a full 180-day window",
+   "figure": "figures/02_launch_segments.png"
+  },
+  {
+   "question": "Who owns the most chart real estate?",
+   "headline": "6.7%",
+   "answer": "Taylor Swift held 6.7% of every chart slot, 2.1x the next artist. The top 10 artists hold 27% of the chart, with collaborations split fairly between credited artists.",
+   "evidence": "Weighted by attribution · q6_top_artists.sql",
+   "figure": "figures/05_top_artists.png"
+  },
+  {
+   "question": "What happens when a superstar drops an album?",
+   "headline": "30 of 50",
+   "answer": "On 21 Apr 2024, Taylor Swift held 30 of the 50 chart slots (HHI 3,669 against a typical 309). All 5 takeovers were album releases, and each faded within about a week.",
+   "evidence": "Herfindahl-Hirschman index of daily artist share · q4_album_takeovers.sql",
+   "figure": "figures/03_artist_concentration.png"
+  },
+  {
+   "question": "How seasonal is the chart?",
+   "headline": "94%",
+   "answer": "Holiday songs, mostly decades old, took 94% of the chart on 26 Dec 2023, then fell to 4% on 28 Dec. December needs its own baseline in any trend analysis.",
+   "evidence": "51 holiday catalogue songs · q5_holiday_cliff.sql",
+   "figure": "figures/04_christmas_cliff.png"
+  },
+  {
+   "question": "When do new songs come out, and when do they chart?",
+   "headline": "66%",
+   "answer": "66% of new releases come out on a Friday (New Music Friday) and 76% debut on a Saturday or Sunday chart, a median 2 days after release. A song's chart fate is largely set within its first weekend.",
+   "evidence": "New releases with exact release dates · q8_release_weekday.sql",
+   "figure": "figures/11_release_weekday.png"
+  },
+  {
+   "question": "Which songs ruled the #1 spot?",
+   "headline": "77 days",
+   "answer": "Die With A Smile (Lady Gaga) held #1 longest, 57 days in a row. 37 songs reached #1; Seven (feat. Latto) (Explicit Ver.) got 75 days across 10 separate runs.",
+   "evidence": "Gaps-and-islands runs at position 1 · q9_number_one_reigns.sql",
+   "figure": "figures/12_number_one_reigns.png"
+  }
+ ]
+}

@@ -1,0 +1,149 @@
+{
+ "subtitle": "Trained on 376 songs that debuted in 2023, tested on 195 that debuted in 2024. Features use only what is known one week after debut. Full method: docs/model_report.md.",
+ "kpis": [
+  {
+   "label": "Week-one model AUC",
+   "value": "0.91",
+   "note": "95% CI 0.86–0.95"
+  },
+  {
+   "label": "Launch-day model AUC",
+   "value": "0.69",
+   "note": "only what is known on debut day"
+  },
+  {
+   "label": "Hit rate in top 20%",
+   "value": "82%",
+   "note": "vs 29% base rate"
+  },
+  {
+   "label": "Climbers' remaining life",
+   "value": "57 days",
+   "note": "vs 8 for non-climbers"
+  }
+ ],
+ "watchlist": [
+  {
+   "song": "Bye Bye Bye - From Deadpool and Wolverine Soundtrack",
+   "artist": "*NSYNC",
+   "track": 126,
+   "debut": "2024-07-29",
+   "debut_pos": 38,
+   "day7": 12,
+   "p": 0.9733,
+   "days": 66
+  },
+  {
+   "song": "Numb",
+   "artist": "Linkin Park",
+   "track": 228,
+   "debut": "2024-09-08",
+   "debut_pos": 44,
+   "day7": 22,
+   "p": 0.9526,
+   "days": 28
+  },
+  {
+   "song": "Tu Boda",
+   "artist": "Oscar Maydon",
+   "track": 172,
+   "debut": "2024-10-15",
+   "debut_pos": 39,
+   "day7": 5,
+   "p": 0.9497,
+   "days": 44
+  },
+  {
+   "song": "The Emptiness Machine",
+   "artist": "Linkin Park",
+   "track": 111,
+   "debut": "2024-09-08",
+   "debut_pos": 7,
+   "day7": 6,
+   "p": 0.9465,
+   "days": 76
+  },
+  {
+   "song": "Big Dawgs",
+   "artist": "Hanumankind",
+   "track": 132,
+   "debut": "2024-08-01",
+   "debut_pos": 48,
+   "day7": 14,
+   "p": 0.9445,
+   "days": 64
+  },
+  {
+   "song": "Please Please Please",
+   "artist": "Sabrina Carpenter",
+   "track": 41,
+   "debut": "2024-06-09",
+   "debut_pos": 6,
+   "day7": 1,
+   "p": 0.9442,
+   "days": 170
+  },
+  {
+   "song": "APT.",
+   "artist": "ROSÉ",
+   "track": 179,
+   "debut": "2024-10-20",
+   "debut_pos": 3,
+   "day7": 1,
+   "p": 0.9301,
+   "days": 39
+  },
+  {
+   "song": "Rockstar",
+   "artist": "LISA",
+   "track": 166,
+   "debut": "2024-06-30",
+   "debut_pos": 14,
+   "day7": 12,
+   "p": 0.9274,
+   "days": 46
+  },
+  {
+   "song": "REAL GANGSTA LOVE",
+   "artist": "Trueno",
+   "track": 120,
+   "debut": "2024-06-09",
+   "debut_pos": 35,
+   "day7": 16,
+   "p": 0.917,
+   "days": 70
+  },
+  {
+   "song": "Diet Pepsi",
+   "artist": "Addison Rae",
+   "track": 210,
+   "debut": "2024-10-03",
+   "debut_pos": 50,
+   "day7": 30,
+   "p": 0.9119,
+   "days": 31
+  }
+ ],
+ "figures": [
+  {
+   "title": "Prediction accuracy",
+   "sub": "ROC curves on the 2024 test set",
+   "src": "figures/09_roc_curves.png"
+  },
+  {
+   "title": "What drives the prediction",
+   "sub": "Permutation importance",
+   "src": "figures/10_feature_importance.png"
+  },
+  {
+   "title": "Week-one momentum",
+   "sub": "Landmark survival analysis at day 7",
+   "src": "figures/07_landmark_week_one.png"
+  },
+  {
+   "title": "Chart survival by debut position",
+   "sub": "Kaplan-Meier",
+   "src": "figures/06_km_debut_position.png"
+  }
+ ]
+}

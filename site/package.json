@@ -1,0 +1,12 @@
+{
+  "name": "global-top50-dashboard",
+  "private": true,
+  "description": "Static web dashboard for the spotify-pipeline warehouse; dev dependency only for browser tests",
+  "scripts": {
+    "e2e": "node tests/e2e.cjs",
+    "screenshots": "node tests/screenshots.cjs"
+  },
+  "devDependencies": {
+    "playwright": "1.63.0"
+  }
+}
