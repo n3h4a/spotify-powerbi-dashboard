@@ -14,7 +14,7 @@
   <img src="https://img.shields.io/badge/tests-103%20passing-0A9EDC?logo=pytest&logoColor=white" alt="Tests"/>
 </p>
 
-**[▶ Open the live dashboard](https://n3h4a.github.io/spotify-powerbi-dashboard/)** · [Insights report](docs/insights.md) · [Model report](docs/model_report.md) · [Data model](docs/data_model.md)
+**[▶ Open the live dashboard](https://n3h4a.github.io/spotify-powerbi-dashboard/)** · [Insights report](docs/insights.md) · [Model report](docs/model_report.md) · [Data model](docs/data_model.md) · [Project handbook](docs/PROJECT_HANDBOOK.md)
 
 <a href="https://n3h4a.github.io/spotify-powerbi-dashboard/"><img src="https://n3h4a.github.io/spotify-powerbi-dashboard/screenshots/overview.png" width="900" alt="Web dashboard overview: click to open the live dashboard"/></a>
 
@@ -204,7 +204,7 @@ flowchart LR
 | Release dates in **3 precisions** (`2024-04-12`, `2019-05`, `1962`) | Misleading release timing | Normalised date + a precision flag |
 | Mixed **CRLF/LF line endings** | Strict parsers reject the file | Tolerant landing + independent row-count reconciliation |
 
-📖 [Data model & design decisions](docs/data_model.md) · [Data dictionary](docs/data_dictionary.md) · [Data-quality report](docs/data_quality_report.md)
+📖 [Data model & design decisions](docs/data_model.md) · [Data dictionary](docs/data_dictionary.md) · [Data-quality report](docs/data_quality_report.md) · [Project handbook (the full story)](docs/PROJECT_HANDBOOK.md)
 
 ---
 
