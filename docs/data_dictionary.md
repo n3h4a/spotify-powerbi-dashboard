@@ -134,7 +134,7 @@ Business-level tables built on the star schema. Each one reconciles exactly to
 | `release_date`, `release_date_precision` | Release date of the debut version. |
 | `days_release_to_debut` | Days from release to debut (day-precision dates only). |
 | `release_age_at_debut` | `new release` (≤ 30 days), `recent` (31–365 days) or `catalog` (older). |
-| `is_holiday_track` | ≥ 90% of chart days fall 15 Nov–31 Dec, and released more than a year before debut. |
+| `is_holiday_track` | ≥ 90% of chart days fall 15 Nov–31 Dec, released more than a year before debut, and not listed in `seeds/not_holiday_tracks.csv`. |
 | `is_left_censored` | Already charting on the first snapshot, so the real debut is unknown. |
 | `is_right_censored` | Still charting on the last snapshot, so chart life is a lower bound. |
 | `has_full_180_day_window` | Debuted at least 180 days before the last snapshot. |

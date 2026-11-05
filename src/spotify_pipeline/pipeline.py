@@ -45,9 +45,10 @@ class Step:
 def _sql_step(relative_path: str) -> Callable[[duckdb.DuckDBPyConnection, Settings], None]:
     def run(con: duckdb.DuckDBPyConnection, settings: Settings) -> None:
         sql = (settings.sql_dir / relative_path).read_text(encoding="utf-8")
-        # The only templated value is the source path; quote it as a SQL string literal.
+        # Templated paths (source file, seeds folder) are quoted as SQL string literals.
         raw_path = settings.raw_csv.as_posix().replace("'", "''")
-        con.execute(sql.replace("{{ raw_csv_path }}", raw_path))
+        seeds = settings.seeds_dir.as_posix().replace("'", "''")
+        con.execute(sql.replace("{{ raw_csv_path }}", raw_path).replace("{{ seeds_dir }}", seeds))
 
     return run
 

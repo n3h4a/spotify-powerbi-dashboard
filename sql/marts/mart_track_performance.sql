@@ -101,9 +101,15 @@ SELECT
     END                                                        AS release_age_at_debut,
     -- Seasonal catalogue: charts only in the holiday season AND is an older
     -- release. The age condition excludes new albums that happen to drop in
-    -- November (e.g. Linkin Park, Kendrick Lamar in Nov 2024).
+    -- November (e.g. Linkin Park, Kendrick Lamar in Nov 2024); seeds/not_holiday_tracks.csv
+    -- lists the few seasonal songs that are not holiday music.
     l.holiday_season_share >= 0.9
-        AND db.debut_date - v.release_date > 365                  AS is_holiday_track,
+        AND db.debut_date - v.release_date > 365
+        AND NOT EXISTS (  -- analyst-maintained exclusions: seasonal but not holiday music
+            SELECT 1 FROM read_csv('{{ seeds_dir }}/not_holiday_tracks.csv', header = true) AS x
+            WHERE lower(x.track_title) = lower(t.track_title)
+              AND lower(x.lead_artist_name) = lower(t.lead_artist_name)
+        )                                                          AS is_holiday_track,
     db.debut_date = b.first_snapshot                           AS is_left_censored,
     l.last_chart_date = b.last_snapshot                        AS is_right_censored,
     db.debut_date <= b.last_snapshot - 180                     AS has_full_180_day_window,
