@@ -92,12 +92,17 @@ function artistStats(D, lo, hi) {
   const total = aggregate(D, lo, hi);
   const daysByTrack = total.tracks;
   return D.artists.map((a, ai) => {
-    let weighted = 0, songs = 0, credited = 0;
+    let weighted = 0, songs = 0, credited = 0, top = null, topDays = 0;
     for (const [ti, w] of a.tracks) {
       const n = daysByTrack.get(ti) || 0;
       if (n) { songs += 1; weighted += n * w; credited += n; }
+      // biggest song in the period (ties: higher overall chart rank): its cover is the
+      // artist's picture, since the chart data has album art but no artist photos
+      if (n > topDays || (n === topDays && n && D.tracks[ti].rank < D.tracks[top].rank)) {
+        top = ti; topDays = n;
+      }
     }
-    return { ai, name: a.name, placeholder: a.placeholder, songs, weighted, credited,
+    return { ai, name: a.name, placeholder: a.placeholder, songs, weighted, credited, top,
       share: total.entries ? weighted / total.entries : 0 };
   }).filter((s) => s.songs > 0).sort((x, y) => y.weighted - x.weighted || x.name.localeCompare(y.name));
 }
@@ -326,7 +331,7 @@ function renderArtists(D, root, selected) {
       </aside>
       <div class="grid">
         <section class="card hero">
-          ${cover(topSong, "cover")}
+          ${cover({ ...topSong, label: a.name }, "cover round")}
           <div>
             <div class="eyebrow">#${rank} artist · ${esc(periodLabel())}</div>
             <h1 data-testid="artist-name">${esc(a.name)}</h1>
@@ -359,7 +364,7 @@ function renderArtists(D, root, selected) {
     list.innerHTML = stats.filter((s) => !ql || s.name.toLowerCase().includes(ql)).slice(0, 200).map((s, i) => `
       <li><button class="${s.ai === pick.ai ? "active" : ""}" data-artist="${s.ai}">
         <span class="rank">${stats.indexOf(s) + 1}</span>
-        <span class="avatar">${esc(s.name[0])}</span>
+        ${cover({ ...D.tracks[s.top], label: s.name }, "round")}
         <span class="name"><b>${esc(s.name)}</b><span>${fmtInt(s.songs)} song${s.songs === 1 ? "" : "s"}</span></span>
         <span class="metric">${fmtPct(s.share)}</span></button></li>`).join("");
   };

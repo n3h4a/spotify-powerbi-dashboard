@@ -183,3 +183,6 @@ table.data tr.click:hover td { background: var(--card-2); }
   main { padding: 16px; }
   .hero { grid-template-columns: 1fr; }
 }
+
+/* artists are shown as circles (songs stay square), as in Spotify */
+.list .round, .hero .round { border-radius: 50%; }
