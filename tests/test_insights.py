@@ -30,4 +30,4 @@ def test_generate_report(real_warehouse, tmp_path):
     text = report.read_text()
     assert "## Executive summary" in text
     assert "Mann-Whitney" in text
-    assert len(list((tmp_path / "docs" / "figures").glob("*.png"))) == 5
+    assert len(list((tmp_path / "docs" / "figures").glob("*.png"))) == 7

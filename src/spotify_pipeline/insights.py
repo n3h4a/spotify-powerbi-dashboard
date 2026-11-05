@@ -7,6 +7,7 @@ Requires the optional ``analysis`` dependencies (scipy, matplotlib).
 
 from __future__ import annotations
 
+import json
 import logging
 from dataclasses import dataclass
 from datetime import timedelta
@@ -337,7 +338,93 @@ def chart_top_artists(rows: list[dict], path: Path) -> None:
 # --------------------------------------------------------------------------- report
 
 
-def generate(con: duckdb.DuckDBPyConnection, sql_dir: Path, report: Path) -> None:
+def short_title(title: str, limit: int = 24) -> str:
+    """Display title: drop "(feat. …)", "(Explicit Ver.)" and " - Remastered" parts if long."""
+    import re
+
+    if len(title) > limit:
+        title = re.sub(r"\s*[\(\[][^)\]]*[\)\]]", "", title)
+        title = re.sub(r"\s+-\s+.*$", "", title).strip()
+    return title if len(title) <= limit else title[: limit - 1].rstrip() + "…"
+
+
+def chart_release_weekday(rows: list[dict], path: Path) -> None:
+    import matplotlib.pyplot as plt
+    import numpy as np
+
+    fig, ax = plt.subplots(figsize=(9, 4.6))
+    fig.subplots_adjust(left=0.07, right=0.98, top=0.76, bottom=0.12)
+    x = np.arange(len(rows))
+    rel = [r["share_released"] * 100 for r in rows]
+    deb = [r["share_debuted"] * 100 for r in rows]
+    w = 0.38
+    ax.bar(x - w / 2 - 0.01, rel, w, color=BLUE, label="Released that weekday")
+    ax.bar(x + w / 2 + 0.01, deb, w, color=ORANGE, label="Debuted on the chart that weekday")
+    for i, (a, b) in enumerate(zip(rel, deb, strict=True)):
+        if a >= 15:
+            ax.text(
+                i - w / 2,
+                a + 1.2,
+                f"{a:.0f}%",
+                ha="center",
+                fontsize=9.5,
+                color=TEXT,
+                fontweight="bold",
+            )
+        if b >= 15:
+            ax.text(
+                i + w / 2,
+                b + 1.2,
+                f"{b:.0f}%",
+                ha="center",
+                fontsize=9.5,
+                color=TEXT,
+                fontweight="bold",
+            )
+    ax.set_xticks(x, [r["day_name"] for r in rows], color=TEXT)
+    ax.set_ylim(0, max(rel + deb) * 1.18)
+    ax.yaxis.grid(True, color=GRID, linewidth=0.8)
+    ax.yaxis.set_major_formatter(lambda v, _: f"{v:.0f}%")
+    ax.legend(loc="upper left", frameon=False, fontsize=9, labelcolor=TEXT)
+    _style(
+        ax,
+        "New Music Friday: songs drop on Friday and chart on the weekend",
+        "Share of new releases by release weekday, and by the weekday they debuted on the "
+        "Global Top 50",
+    )
+    _save(fig, path)
+
+
+def chart_no1_reigns(rows: list[dict], path: Path) -> None:
+    import matplotlib.pyplot as plt
+
+    rows = rows[:10]
+    fig, ax = plt.subplots(figsize=(9, 4.9))
+    fig.subplots_adjust(left=0.30, right=0.95, top=0.8, bottom=0.06)
+    labels = [f"{short_title(r['track_label'])} · {r['lead_artist_name']}" for r in rows]
+    total = [r["days_at_no1"] for r in rows]
+    run = [r["longest_run"] for r in rows]
+    ax.barh(labels, total, height=0.66, color=BLUE_LIGHT, label="Total days at #1")
+    ax.barh(labels, run, height=0.36, color=BLUE, label="Longest unbroken run")
+    for i, t in enumerate(total):
+        ax.text(t + 0.8, i, f"{t} days", va="center", fontsize=8.5, color=TEXT)
+    ax.invert_yaxis()
+    ax.set_xlim(0, max(total) * 1.18)
+    ax.xaxis.grid(True, color=GRID, linewidth=0.8)
+    ax.tick_params(axis="y", labelcolor=TEXT, labelsize=9)
+    ax.spines["bottom"].set_visible(False)
+    ax.legend(loc="lower right", frameon=False, fontsize=8.5, labelcolor=TEXT)
+    _style(
+        ax,
+        f"{rows[0]['track_label']} ruled #1 longest: {rows[0]['days_at_no1']} days",
+        "Songs with the most days at #1; the inner bar is the longest unbroken run",
+    )
+    _save(fig, path)
+
+
+def generate(
+    con: duckdb.DuckDBPyConnection, sql_dir: Path, report: Path, site_json: Path | None = None
+) -> None:
     from scipy import stats
 
     fig_dir = report.parent / "figures"
@@ -348,6 +435,8 @@ def generate(con: duckdb.DuckDBPyConnection, sql_dir: Path, report: Path) -> Non
     holiday = _query(con, sql_dir, "q5_holiday_cliff")
     artists = _query(con, sql_dir, "q6_top_artists")
     [timing] = _query(con, sql_dir, "q7_release_timing")
+    weekdays = _query(con, sql_dir, "q8_release_weekday")
+    reigns = _query(con, sql_dir, "q9_number_one_reigns")
     cohort = _query(con, sql_dir, "cohort")
     daily = con.execute(
         "SELECT chart_date, artist_hhi FROM marts.mart_daily_chart ORDER BY chart_date"
@@ -402,6 +491,13 @@ def generate(con: duckdb.DuckDBPyConnection, sql_dir: Path, report: Path) -> Non
     chart_concentration(daily, takeovers, median_hhi, fig_dir / "03_artist_concentration.png")
     chart_holiday(holiday, fig_dir / "04_christmas_cliff.png")
     chart_top_artists(artists, fig_dir / "05_top_artists.png")
+    chart_release_weekday(weekdays, fig_dir / "11_release_weekday.png")
+    chart_no1_reigns(reigns, fig_dir / "12_number_one_reigns.png")
+    wd = {r["day_name"]: r for r in weekdays}
+    friday_release = wd["Friday"]["share_released"]
+    weekend_debut = wd["Saturday"]["share_debuted"] + wd["Sunday"]["share_debuted"]
+    top_reign = reigns[0]
+    many_runs = max(reigns[:10], key=lambda r: r["n_runs"])
 
     def table(rows: list[dict], cols: list[tuple[str, str]]) -> list[str]:
         out = ["| " + " | ".join(h for h, _ in cols) + " |", "|" + "---|" * len(cols)]
@@ -442,6 +538,10 @@ def generate(con: duckdb.DuckDBPyConnection, sql_dir: Path, report: Path) -> Non
         f"7. **The Christmas cliff.** Holiday songs held **{pct(peak_h['holiday_track_share'])}"
         f"** of the chart on {peak_h['chart_date']:%d %b %Y} and "
         f"{pct(cliff['holiday_track_share'])} on {cliff['chart_date']:%d %b}.",
+        f"8. **New Music Friday rules the calendar.** {pct(friday_release)} of new releases come "
+        f"out on a Friday and {pct(weekend_debut)} debut on the weekend chart.",
+        f"9. **{top_reign['track_label']} ruled #1 longest:** {top_reign['days_at_no1']} days, "
+        f"{top_reign['longest_run']} of them in a row, among {len(reigns)} songs that reached #1.",
         "",
         "## Method",
         "",
@@ -571,6 +671,41 @@ def generate(con: duckdb.DuckDBPyConnection, sql_dir: Path, report: Path) -> Non
         "",
         "SQL: [q5_holiday_cliff.sql](../sql/analyses/q5_holiday_cliff.sql)",
         "",
+        "## Q6. When do new songs come out, and when do they chart?",
+        "",
+        "![Release weekday](figures/11_release_weekday.png)",
+        "",
+        f"The industry's *New Music Friday* is visible in the data: {pct(friday_release)} of new "
+        f"releases come out on a Friday (most of the rest on Thursday, which is Friday "
+        f"midnight in other time zones), and {pct(weekend_debut)} of them debut on a "
+        f"Saturday or Sunday chart. Combined with Q3, a release's chart fate is largely "
+        "decided within its first weekend.",
+        "",
+        "SQL: [q8_release_weekday.sql](../sql/analyses/q8_release_weekday.sql)",
+        "",
+        "## Q7. Which songs ruled the #1 spot?",
+        "",
+        "![Number one reigns](figures/12_number_one_reigns.png)",
+        "",
+        f"{len(reigns)} songs reached #1 in the period. **{top_reign['track_label']}** "
+        f"({top_reign['lead_artist_name']}) held it longest: {top_reign['days_at_no1']} days, "
+        f"including {top_reign['longest_run']} in a row. Reigns differ in shape: "
+        f"*{many_runs['track_label']}* reached {many_runs['days_at_no1']} days at #1 across "
+        f"{many_runs['n_runs']} separate runs, trading places with other hits.",
+        "",
+        *table(
+            reigns[:10],
+            [
+                ("Song", lambda r: r["track_label"]),
+                ("Artist", lambda r: r["lead_artist_name"]),
+                ("Days at #1", lambda r: r["days_at_no1"]),
+                ("Longest run", lambda r: r["longest_run"]),
+                ("Separate runs", lambda r: r["n_runs"]),
+            ],
+        ),
+        "",
+        "SQL: [q9_number_one_reigns.sql](../sql/analyses/q9_number_one_reigns.sql)",
+        "",
         "---",
         "",
         "## Recommendations",
@@ -587,6 +722,10 @@ def generate(con: duckdb.DuckDBPyConnection, sql_dir: Path, report: Path) -> Non
         f"album week, when one artist can hold up to "
         f"{pct(biggest['peak_slots_of_50'] / 50)} of the chart, and expect December "
         "chart space to be largely taken by holiday catalogue.",
+        "5. **Release on Friday and watch the first weekend.** Two-thirds of new songs come "
+        "out on a Friday and debut on the weekend chart, and week-one movement is the best "
+        "available predictor of a long run (see the "
+        "[model report](model_report.md)).",
         "",
         "## Limitations",
         "",
@@ -597,13 +736,108 @@ def generate(con: duckdb.DuckDBPyConnection, sql_dir: Path, report: Path) -> Non
         "- The results are associations, not causal effects. For example, tracks that climb "
         "may already be stronger songs.",
         "- The holiday rule depends on release age, so a brand-new Christmas song would be "
-        "missed, and one seasonal-but-not-Christmas track (*Heather*, Conan Gray) is "
-        "included.",
+        "missed. Seasonal songs that are not holiday music are excluded through an "
+        "editable list (`seeds/not_holiday_tracks.csv`).",
         "",
-        "**Next (Phase 3):** model chart survival directly (Kaplan-Meier, Cox proportional "
-        "hazards), so censored tracks are used instead of excluded, and predict longevity "
-        "from first-week signals.",
+        "**Going further:** the [model report](model_report.md) models chart survival "
+        "directly (Kaplan-Meier, Cox proportional hazards), uses still-charting songs "
+        "instead of dropping them, and predicts longevity from first-week signals.",
     ]
     report.parent.mkdir(parents=True, exist_ok=True)
     report.write_text("\n".join(md) + "\n", encoding="utf-8")
-    log.info("Insights written to %s (%d figures)", report, 5)
+    log.info("Insights written to %s (%d figures)", report, 7)
+
+    if site_json is not None:
+        top_artist = artists[0]
+        questions = [
+            {
+                "question": "How long do songs survive on the Global Top 50?",
+                "headline": f"{median_life:.0f} days",
+                "answer": f"That is the median chart life. {pct(under_week)} of songs last a week "
+                f"or less, and the longest-charting 10% of songs hold {pct(top_decile)} of all "
+                "chart slots: the chart is a few long runs and many brief visits.",
+                "evidence": f"{n_uncensored} songs with a known debut · "
+                "q1_longevity_distribution.sql",
+                "figure": "figures/01_longevity.png",
+            },
+            {
+                "question": "Does a big debut mean a long run?",
+                "headline": f"{ratio:.0f}x longer",
+                "answer": f"Songs that keep climbing after their debut chart a median "
+                f"{launch.median_a:g} days in their first 180, against {launch.median_b:g} for "
+                f"songs that peak on day one ({pct(peaked_share)} of songs). Debut position "
+                f"itself is a weak predictor (Spearman ρ = {rho.statistic:.2f}), and "
+                f"collaborations last no longer than solo songs ({collab.median_a:g} vs "
+                f"{collab.median_b:g} days, {fmt_p(collab.p_value)}).",
+                "evidence": f"Mann-Whitney U {fmt_p(launch.p_value)}, effect size "
+                f"{launch.effect_size:.2f} · {len(cohort)} songs with a full 180-day window",
+                "figure": "figures/02_launch_segments.png",
+            },
+            {
+                "question": "Who owns the most chart real estate?",
+                "headline": pct(top_artist["share_of_chart"], 1),
+                "answer": f"{top_artist['artist_name']} held "
+                f"{pct(top_artist['share_of_chart'], 1)} of every chart slot, "
+                f"{top_artist['share_of_chart'] / artists[1]['share_of_chart']:.1f}x the next "
+                f"artist. The top 10 artists hold {pct(top10_artist_share)} of the chart, "
+                "with collaborations split fairly between credited artists.",
+                "evidence": "Weighted by attribution · q6_top_artists.sql",
+                "figure": "figures/05_top_artists.png",
+            },
+            {
+                "question": "What happens when a superstar drops an album?",
+                "headline": f"{biggest['peak_slots_of_50']} of 50",
+                "answer": f"On {biggest['first_day']:%d %b %Y}, {biggest['artist_name']} held "
+                f"{biggest['peak_slots_of_50']} of the 50 chart slots (HHI "
+                f"{biggest['peak_hhi']:,} against a typical {median_hhi:,.0f}). All "
+                f"{len(takeovers)} takeovers were album releases, and each faded within about "
+                "a week.",
+                "evidence": "Herfindahl-Hirschman index of daily artist share · "
+                "q4_album_takeovers.sql",
+                "figure": "figures/03_artist_concentration.png",
+            },
+            {
+                "question": "How seasonal is the chart?",
+                "headline": pct(peak_h["holiday_track_share"]),
+                "answer": "Holiday songs, mostly decades old, took "
+                f"{pct(peak_h['holiday_track_share'])} "
+                f"of the chart on {peak_h['chart_date']:%d %b %Y}, then fell to "
+                f"{pct(cliff['holiday_track_share'])} on {cliff['chart_date']:%d %b}. December "
+                "needs its own baseline in any trend analysis.",
+                "evidence": "51 holiday catalogue songs · q5_holiday_cliff.sql",
+                "figure": "figures/04_christmas_cliff.png",
+            },
+            {
+                "question": "When do new songs come out, and when do they chart?",
+                "headline": pct(friday_release),
+                "answer": f"{pct(friday_release)} of new releases come out on a Friday (New Music "
+                f"Friday) and {pct(weekend_debut)} debut on a Saturday or Sunday chart, a median "
+                f"{timing['median_days']:g} days after release. A song's chart fate is largely "
+                "set within its first weekend.",
+                "evidence": "New releases with exact release dates · q8_release_weekday.sql",
+                "figure": "figures/11_release_weekday.png",
+            },
+            {
+                "question": "Which songs ruled the #1 spot?",
+                "headline": f"{top_reign['days_at_no1']} days",
+                "answer": f"{top_reign['track_label']} ({top_reign['lead_artist_name']}) held #1 "
+                f"longest, {top_reign['longest_run']} days in a row. {len(reigns)} songs reached "
+                f"#1; {many_runs['track_label']} got {many_runs['days_at_no1']} days across "
+                f"{many_runs['n_runs']} separate runs.",
+                "evidence": "Gaps-and-islands runs at position 1 · q9_number_one_reigns.sql",
+                "figure": "figures/12_number_one_reigns.png",
+            },
+        ]
+        site_json.parent.mkdir(parents=True, exist_ok=True)
+        site_json.write_text(
+            json.dumps(
+                {
+                    "subtitle": "Seven business questions answered from 556 daily charts, with the "
+                    "statistics behind each answer. Full method: docs/insights.md.",
+                    "questions": questions,
+                },
+                indent=1,
+                ensure_ascii=False,
+            ),
+            encoding="utf-8",
+        )

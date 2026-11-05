@@ -11,6 +11,8 @@
 5. **Slow burners win.** Tracks that reached the chart 1–12 months after release last a median **21 days**, against 6 for brand-new releases.
 6. **Album drops take over the chart.** On 21 Apr 2024, Taylor Swift held **30 of 50 slots** (HHI 3,669 against a typical 309). 3 of the 5 takeover events were Taylor Swift releases.
 7. **The Christmas cliff.** Holiday songs held **94%** of the chart on 26 Dec 2023 and 4% on 28 Dec.
+8. **New Music Friday rules the calendar.** 66% of new releases come out on a Friday and 76% debut on the weekend chart.
+9. **Die With A Smile ruled #1 longest:** 77 days, 57 of them in a row, among 37 songs that reached #1.
 
 ## Method
 
@@ -45,8 +47,8 @@ SQL: [q1_longevity_distribution.sql](../sql/analyses/q1_longevity_distribution.s
 
 | Dimension | Segment | Tracks | Median days (first 180) | Reached 30+ days |
 |---|---|---|---|---|
-| Credits | Solo | 472 | 6 | 24% |
 | Credits | Collaboration | 99 | 6 | 24% |
+| Credits | Solo | 472 | 6 | 24% |
 | Debut position | Debuted #1-10 | 112 | 15 | 34% |
 | Debut position | Debuted #11-25 | 151 | 5 | 15% |
 | Debut position | Debuted #26-50 | 308 | 4 | 25% |
@@ -100,6 +102,35 @@ Holiday catalogue songs, most released decades ago, build up through December, p
 
 SQL: [q5_holiday_cliff.sql](../sql/analyses/q5_holiday_cliff.sql)
 
+## Q6. When do new songs come out, and when do they chart?
+
+![Release weekday](figures/11_release_weekday.png)
+
+The industry's *New Music Friday* is visible in the data: 66% of new releases come out on a Friday (most of the rest on Thursday, which is Friday midnight in other time zones), and 76% of them debut on a Saturday or Sunday chart. Combined with Q3, a release's chart fate is largely decided within its first weekend.
+
+SQL: [q8_release_weekday.sql](../sql/analyses/q8_release_weekday.sql)
+
+## Q7. Which songs ruled the #1 spot?
+
+![Number one reigns](figures/12_number_one_reigns.png)
+
+37 songs reached #1 in the period. **Die With A Smile** (Lady Gaga) held it longest: 77 days, including 57 in a row. Reigns differ in shape: *Seven (feat. Latto) (Explicit Ver.)* reached 75 days at #1 across 10 separate runs, trading places with other hits.
+
+| Song | Artist | Days at #1 | Longest run | Separate runs |
+|---|---|---|---|---|
+| Die With A Smile | Lady Gaga | 77 | 57 | 3 |
+| Seven (feat. Latto) (Explicit Ver.) | Jung Kook | 75 | 45 | 10 |
+| Ella Baila Sola | Eslabon Armado | 40 | 20 | 5 |
+| greedy | Tate McRae | 34 | 17 | 7 |
+| Beautiful Things | Benson Boone | 34 | 14 | 7 |
+| Espresso | Sabrina Carpenter | 31 | 14 | 5 |
+| All I Want for Christmas Is You | Mariah Carey | 27 | 26 | 2 |
+| Paint The Town Red | Doja Cat | 23 | 19 | 4 |
+| La Diabla | Xavi | 22 | 16 | 4 |
+| BIRDS OF A FEATHER | Billie Eilish | 22 | 11 | 6 |
+
+SQL: [q9_number_one_reigns.sql](../sql/analyses/q9_number_one_reigns.sql)
+
 ---
 
 ## Recommendations
@@ -110,12 +141,13 @@ For a label, artist team or editorial playlist team using this data:
 2. **Back slow burners.** Tracks that find an audience months after release last longest. Catalogue and mid-life tracks deserve promotion budget, not only launches.
 3. **Don't count on a feature to extend a song's life.** Collaborations show no longevity advantage. Their value is reach, not staying power.
 4. **Plan around album drops and the holidays.** Avoid releasing into a superstar album week, when one artist can hold up to 60% of the chart, and expect December chart space to be largely taken by holiday catalogue.
+5. **Release on Friday and watch the first weekend.** Two-thirds of new songs come out on a Friday and debut on the weekend chart, and week-one movement is the best available predictor of a long run (see the [model report](model_report.md)).
 
 ## Limitations
 
 - The data covers 18 months of a single chart (Global Top 50). Findings may not generalise to regional charts or to streams outside the top 50.
 - Chart position is a rank, not a stream count, so the size of a hit can't be measured, only its rank and duration.
 - The results are associations, not causal effects. For example, tracks that climb may already be stronger songs.
-- The holiday rule depends on release age, so a brand-new Christmas song would be missed, and one seasonal-but-not-Christmas track (*Heather*, Conan Gray) is included.
+- The holiday rule depends on release age, so a brand-new Christmas song would be missed. Seasonal songs that are not holiday music are excluded through an editable list (`seeds/not_holiday_tracks.csv`).
 
-**Next (Phase 3):** model chart survival directly (Kaplan-Meier, Cox proportional hazards), so censored tracks are used instead of excluded, and predict longevity from first-week signals.
+**Going further:** the [model report](model_report.md) models chart survival directly (Kaplan-Meier, Cox proportional hazards), uses still-charting songs instead of dropping them, and predicts longevity from first-week signals.
