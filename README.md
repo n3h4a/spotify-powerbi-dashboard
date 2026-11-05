@@ -16,7 +16,7 @@
 
 **[▶ Open the live dashboard](https://n3h4a.github.io/spotify-powerbi-dashboard/)** · [Insights report](docs/insights.md) · [Model report](docs/model_report.md) · [Data model](docs/data_model.md)
 
-<img src="screenshots/web/overview.png" width="900" alt="Web dashboard overview"/>
+<a href="https://n3h4a.github.io/spotify-powerbi-dashboard/"><img src="https://n3h4a.github.io/spotify-powerbi-dashboard/screenshots/overview.png" width="900" alt="Web dashboard overview: click to open the live dashboard"/></a>
 
 </div>
 
@@ -119,22 +119,23 @@ For a label, an artist's team or a playlist editor:
 ### Web dashboard: [n3h4a.github.io/spotify-powerbi-dashboard](https://n3h4a.github.io/spotify-powerbi-dashboard/)
 
 A static site (`site/`) with five pages: **Overview, Artists, Songs, Insights, Predictions**,
-plus a period filter (all time, a year or a quarter). Every number is computed from the
-warehouse export with the same definitions as the Power BI measures.
+plus a period filter (all time, a year or a quarter). Search any of 345 artists or 797 songs,
+click a bar to drill in, and follow a song's day-by-day chart journey. Every number is
+computed from the warehouse export with the same definitions as the Power BI measures.
 
 <table>
 <tr>
-<td width="50%"><img src="screenshots/web/artists.png" alt="Artists page"/><br><b>Artists:</b> chart share by month, discography, and a one-line summary for any of 345 artists</td>
-<td width="50%"><img src="screenshots/web/songs.png" alt="Songs page"/><br><b>Songs:</b> the daily chart journey of any of 797 songs, its popularity, and its release history</td>
+<td width="50%"><img src="https://n3h4a.github.io/spotify-powerbi-dashboard/screenshots/artists.png" alt="Artists page"/><br><b>Artists:</b> chart share by month, discography, and a one-line summary for any of 345 artists</td>
+<td width="50%"><img src="https://n3h4a.github.io/spotify-powerbi-dashboard/screenshots/songs.png" alt="Songs page"/><br><b>Songs:</b> the daily chart journey of any of 797 songs, its popularity, and its release history</td>
 </tr>
 <tr>
-<td><img src="screenshots/web/insights.png" alt="Insights page"/><br><b>Insights:</b> the business questions, answered with charts</td>
-<td><img src="screenshots/web/predictions.png" alt="Predictions page"/><br><b>Predictions:</b> model accuracy and a watchlist of recent debuts</td>
+<td><img src="https://n3h4a.github.io/spotify-powerbi-dashboard/screenshots/insights.png" alt="Insights page"/><br><b>Insights:</b> the business questions, answered with charts</td>
+<td><img src="https://n3h4a.github.io/spotify-powerbi-dashboard/screenshots/predictions.png" alt="Predictions page"/><br><b>Predictions:</b> model accuracy and a watchlist of recent debuts</td>
 </tr>
 </table>
 
-> Album art loads from Spotify's image servers on the live site. The screenshots were taken in
-> a sandbox without access to them, so covers appear as generated placeholder tiles.
+> These screenshots are taken from the live site by every deployment (see
+> `.github/workflows/pages.yml`), so they always show the dashboard as it currently is.
 
 **Tested like a product.** An end-to-end test opens the dashboard in Chromium and goes through
 every period, **every artist page and every song page**, plus search, clicks, links, the

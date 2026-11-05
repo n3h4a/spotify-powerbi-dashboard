@@ -1,11 +1,14 @@
 name: Deploy web dashboard
 
-# Publishes site/ to GitHub Pages. One-time setup in the repository:
+# Publishes site/ to GitHub Pages, with fresh screenshots of every page.
+# One-time setup in the repository:
 # Settings -> Pages -> Build and deployment -> Source: "GitHub Actions".
 on:
   push:
     branches: [main]
     paths: ["site/**", ".github/workflows/pages.yml"]
+  schedule:
+    - cron: "17 6 * * 1"  # weekly refresh of the published screenshots
   workflow_dispatch:
 
 permissions:
@@ -26,6 +29,30 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/configure-pages@v5
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      # Screenshots of the real site, with album covers (they load on GitHub's runners),
+      # published with the site at /screenshots/ and embedded in the README.
+      - name: Screenshot every page
+        run: |
+          npm ci --prefix site
+          npx --prefix site playwright install --with-deps chromium
+          python3 -m http.server --directory site 8000 &
+          sleep 2
+          NODE_PATH=site/node_modules node site/tests/screenshots.cjs http://localhost:8000/ site/screenshots
+          NODE_PATH=site/node_modules node -e "
+            const { chromium } = require('playwright');
+            (async () => {
+              const b = await chromium.launch(); const p = await b.newPage();
+              await p.goto('http://localhost:8000/#/artists');
+              await p.waitForLoadState('networkidle');
+              const n = await p.\$\$eval('.list img', (i) => i.filter((x) => x.naturalWidth > 0).length);
+              console.log('album covers loaded in the artist list:', n);
+              await b.close();
+            })();"
+          ls -la site/screenshots
+          rm -rf site/node_modules
       - uses: actions/upload-pages-artifact@v3
         with:
           path: site

@@ -36,8 +36,8 @@ serve:  ## Serve the web dashboard at http://localhost:8000
 e2e:  ## Click through every dashboard page in Chromium and check every number with SQL
 	$(PYTHON) -m pytest tests/test_web_e2e.py -v
 
-screenshots:  ## Capture README screenshots of the web dashboard (needs `make serve` running)
-	node site/tests/screenshots.cjs http://localhost:8000/ screenshots/web
+screenshots:  ## Capture screenshots locally into site/screenshots (needs `make serve`)
+	node site/tests/screenshots.cjs http://localhost:8000/ site/screenshots
 
 all:  ## build + check + export
 	$(PYTHON) -m spotify_pipeline all
