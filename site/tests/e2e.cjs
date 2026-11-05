@@ -21,9 +21,18 @@ const { chromium } = require("playwright");
     const el = document.querySelector(`[data-testid="${id}"]`);
     return [id, el ? el.textContent.trim() : null];
   })), ids);
+  // Run an action and wait until the page has rendered again. Waiting only for "the
+  // artists page is ready" is not enough when the action re-renders the same page.
+  const rendered = async (action, p) => {
+    const before = await page.evaluate(() => Number(document.body.dataset.render) || 0);
+    await action();
+    await page.waitForFunction((n) => Number(document.body.dataset.render) > n, before, { timeout: 15000 });
+    if (p) await ready(p);
+  };
   const goto = async (hash, p) => {
-    await page.evaluate((h) => { location.hash = h; }, hash);
-    await ready(p);
+    const current = await page.evaluate(() => location.hash);
+    if (current === hash) return;
+    await rendered(() => page.evaluate((h) => { location.hash = h; }, hash), p);
   };
   const OVERVIEW = ["kpi-songs", "kpi-artists", "kpi-popularity", "kpi-explicit", "kpi-no1"];
   const ARTIST = ["artist-name", "artist-songs", "artist-share", "artist-days", "artist-no1", "artist-best", "artist-pop"];
@@ -37,12 +46,10 @@ const { chromium } = require("playwright");
 
   // 1. Overview KPIs for every period
   for (const p of periods) {
-    await page.selectOption("#period", p);
-    await ready("overview");
+    if (p !== "all") await rendered(() => page.selectOption("#period", p), "overview");
     out.overview[p] = await read(OVERVIEW);
   }
-  await page.selectOption("#period", "all");
-  await ready("overview");
+  await rendered(() => page.selectOption("#period", "all"), "overview");
 
   // 2. Every artist page (all time) and every song page
   for (let ai = 0; ai < data.artists.length; ai += 1) {
@@ -59,35 +66,28 @@ const { chromium } = require("playwright");
   // a) search for an artist and click the result
   await goto("#/artists", "artists");
   await page.fill("#artist-search", "sabrina");
-  await page.click("#artist-list button");
-  await ready("artists");
+  await rendered(() => page.click("#artist-list button"), "artists");
   out.interactions.artistSearch = await read(["artist-name", "artist-songs", "artist-no1"]);
   // b) click the first album cover in the discography -> song page of that song
-  await page.click(".covers button");
-  await ready("songs");
+  await rendered(() => page.click(".covers button"), "songs");
   out.interactions.coverClick = await read(["song-title"]);
   // c) the period filter changes the artist page
   await goto("#/artists", "artists");
-  await page.selectOption("#period", "2023");
-  await ready("artists");
+  await rendered(() => page.selectOption("#period", "2023"), "artists");
   out.interactions.artist2023 = await read(["artist-name", "artist-share", "artist-songs"]);
-  await page.selectOption("#period", "all");
-  await ready("artists");
+  await rendered(() => page.selectOption("#period", "all"), "artists");
   // d) search for a song and click it
   await goto("#/songs", "songs");
   await page.fill("#song-search", "espresso");
-  await page.click("#song-list button");
-  await ready("songs");
+  await rendered(() => page.click("#song-list button"), "songs");
   out.interactions.songSearch = await read(SONG);
   // e) the song page links back to its artist
-  await page.click(".hero .by a");
-  await ready("artists");
+  await rendered(() => page.click(".hero .by a"), "artists");
   out.interactions.songToArtist = await read(["artist-name"]);
   // f) watchlist row on the predictions page opens that song
   await goto("#/predictions", "predictions");
   const watchFirst = await page.$eval("[data-testid=watchlist] tbody tr td", (td) => td.textContent.trim());
-  await page.click("[data-testid=watchlist] tbody tr");
-  await ready("songs");
+  await rendered(() => page.click("[data-testid=watchlist] tbody tr"), "songs");
   out.interactions.watchlist = { row: watchFirst, opened: (await read(["song-title"]))["song-title"] };
   // g) every insight card has an image that loaded
   await goto("#/insights", "insights");
@@ -99,8 +99,10 @@ const { chromium } = require("playwright");
   // h) tabs navigate
   out.interactions.tabs = [];
   for (const tab of ["overview", "artists", "songs", "insights", "predictions"]) {
-    await page.click(`.tabs a[data-page=${tab}]`);
-    await ready(tab);
+    const href = await page.$eval(`.tabs a[data-page=${tab}]`, (a) => a.getAttribute("href"));
+    if ((await page.evaluate(() => location.hash)) !== href) {
+      await rendered(() => page.click(`.tabs a[data-page=${tab}]`), tab);
+    }
     out.interactions.tabs.push(await page.$eval(".tabs a.active", (a) => a.dataset.page));
   }
 

@@ -32,4 +32,4 @@ SELECT dimension, segment,
        round(avg(CASE WHEN chart_days_first_180 >= 30 THEN 1.0 ELSE 0.0 END), 3) AS share_30_plus_days
 FROM segmented
 GROUP BY ALL
-ORDER BY dimension, median_chart_days DESC
+ORDER BY dimension, median_chart_days DESC, segment  -- tie-break: reproducible order

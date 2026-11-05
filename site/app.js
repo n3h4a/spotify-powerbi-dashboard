@@ -543,6 +543,8 @@ function render() {
     predictions: renderPredictions }[page] || renderOverview)(D, root, id);
   window.scrollTo({ top: 0 });
   document.body.dataset.ready = page;
+  // incremented on every render, so tests can wait for a re-render of the same page
+  document.body.dataset.render = String((Number(document.body.dataset.render) || 0) + 1);
 }
 
 async function main() {

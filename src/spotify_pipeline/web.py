@@ -64,6 +64,7 @@ def build_payload(con: duckdb.DuckDBPyConnection) -> dict:
         """
         SELECT b.artist_key, b.track_key, b.attribution_weight, b.is_lead_artist
         FROM gold.bridge_track_artist AS b
+        ORDER BY b.track_key, b.credit_order  -- deterministic output for CI diff checks
     """,
     )
     by_artist: dict[str, list] = {}
