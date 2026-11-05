@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "spotify-pipeline"
-version = "0.1.0"
-description = "ELT pipeline that models 18 months of Spotify Global Top 50 snapshots into a tested star schema."
+version = "1.0.0"
+description = "End-to-end analytics on 18 months of Spotify Global Top 50 charts: tested ELT, star schema, statistics, survival models, and dashboards."
 readme = "README.md"
 requires-python = ">=3.10"
 license = { file = "LICENSE" }
