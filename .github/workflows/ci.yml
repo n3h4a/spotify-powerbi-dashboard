@@ -40,9 +40,12 @@ jobs:
         run: make insights
       - name: Survival analysis and longevity model
         run: make model
+      - name: Web dashboard data
+        run: make web
       - name: Generated reports are up to date
         run: |
           git diff --exit-code docs/data_quality_report.md docs/insights.md \
+            site/data/dashboard.json site/data/insights.json \
             || (echo "::error::Generated docs are stale. Run 'make check insights' and commit them." && exit 1)
       - uses: actions/upload-artifact@v4
         with:
@@ -51,3 +54,24 @@ jobs:
             exports/
             docs/figures/
           retention-days: 14
+
+  web:
+    name: Web dashboard end-to-end (real browser)
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - run: make install
+      - name: Install Playwright and Chromium
+        run: |
+          npm ci --prefix site
+          npx --prefix site playwright install --with-deps chromium
+      - name: Click through every page and check every number against SQL
+        run: python -m pytest tests/test_web_e2e.py -v
