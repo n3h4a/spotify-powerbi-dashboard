@@ -14,7 +14,7 @@
   <img src="https://img.shields.io/badge/tests-103%20passing-0A9EDC?logo=pytest&logoColor=white" alt="Tests"/>
 </p>
 
-**[▶ Open the live dashboard](https://n3h4a.github.io/spotify-powerbi-dashboard/)** · [Insights report](docs/insights.md) · [Model report](docs/model_report.md) · [Data model](docs/data_model.md) · [Project handbook](docs/PROJECT_HANDBOOK.md)
+**[▶ Open the live dashboard](https://n3h4a.github.io/spotify-powerbi-dashboard/)** · [Insights report](docs/insights.md) · [Model report](docs/model_report.md) · [Data model](docs/data_model.md) · [Project handbook](docs/PROJECT_HANDBOOK.md) ([PDF](docs/PROJECT_HANDBOOK.pdf))
 
 <a href="https://n3h4a.github.io/spotify-powerbi-dashboard/"><img src="https://n3h4a.github.io/spotify-powerbi-dashboard/screenshots/overview.png" width="900" alt="Web dashboard overview: click to open the live dashboard"/></a>
 

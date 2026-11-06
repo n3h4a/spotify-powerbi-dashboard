@@ -8,6 +8,7 @@
 **Author and sole contributor:** Neha Karamchandani (GitHub `n3h4a`)
 **Repository:** https://github.com/n3h4a/spotify-powerbi-dashboard
 **Live dashboard:** https://n3h4a.github.io/spotify-powerbi-dashboard/
+**Printable copy:** [`docs/PROJECT_HANDBOOK.pdf`](PROJECT_HANDBOOK.pdf)
 
 ---
 
